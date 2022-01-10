@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ログイン画面</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+  </head>
+  <body>
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col">
+      <form action="/api/signin" method="post">
+        <div class="mb-4">
+        <label class="block text-grey-darker text-sm font-bold mb-2" for="email">
+          email
+        </label>
+        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" id="email" type="text" placeholder="email" name="email" />
+      </div>
+      <div class="mb-6">
+        <label class="block text-grey-darker text-sm font-bold mb-2" for="password">
+          Password
+        </label>
+        <input class="shadow appearance-none border border-red rounded w-full py-2 px-3 text-grey-darker mb-3" id="password" type="password" placeholder="******************" name="password" />
+        <p class="text-red text-xs italic">Please choose a password.</p>
+      </div>
+      <div class="flex items-center justify-between">
+        <button class="bg-blue hover:bg-blue-dark" type="submit">Sign In</button>
+        <a class="inline-block align-baseline font-bold text-sm text-blue hover:text-blue-darker" href="/signup"> アカウントをお持ちでない方はこちら </a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
