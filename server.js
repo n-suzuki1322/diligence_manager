@@ -21,8 +21,8 @@ app
   })
 )
 .use(express.json())
-.use(express.static('src'))
 .use(express.urlencoded({ extended: false }))
+.use(express.static('src'))
 .use((req, res, next) => {
   if (req.session.userId) {
     res.locals.name = req.session.name
@@ -67,16 +67,119 @@ const mysql_query = (connection, sql, values) => {
   })
 }
 
-// 全てのルーティングでセッション確認条件分岐
-app
-// .get('*', (req, res, next) => {
-//   // if (req.session.userId === undefined) {
-//   //   return;
-//   // } else {
-//   //   next()
-//   // }
-// })
+//ルーティングでセッション確認分岐
+function checkSession(req, res, next) {
+  if (!req.session.userId) {
+    res.redirect('/')
+  } else {
+    next()
+  }
+}
 
+app
+.get('/', (req, res) => {
+  const userId = req.session.userId;
+  const name = req.session.name;
+  if (userId) {
+    res.render('main.ejs', { userId: userId, name: name});
+  }else {
+    res.render('home.ejs');
+  }
+})
+
+.get('/signin', (req, res) => {
+  res.render("singin.ejs")
+})
+
+// signin
+.post('/api/signin', (req, res) => {
+  const r = req.body;
+  const email = r.email;
+  const password = r.password;
+  console.log(`signin email = ${email}`);
+  console.log(`signin password = ${password}`);
+  connection.query(
+    'SELECT * FROM admins WHERE email = ?;',
+        [email],
+        (error, result) => {
+          if (error) {
+            res.send({ message: 'Maybe wrong email/password combination!' })
+            res.redirect('/signin');
+          }
+          if (result.length > 0) {
+            const hash = result[0].password;
+            bcrypt.compare(password, hash, (error, isEqual) => {
+              if (isEqual) {
+                req.session.userId = result[0].id;
+                req.session.name = result[0].name;
+                req.session.email = result[0].email;
+                console.log(`session userId = ${req.session.userId}`);
+                console.log(`session username = ${req.session.name}`);
+                res.redirect('/');
+              } else {
+                console.log(`error is ${error}`);
+                res.redirect('/signin');
+              }
+            });
+          } else {
+            res.redirect('/signin');
+          }
+        }
+        )
+})
+
+
+.get('/daily', checkSession, async (req, res) => {
+  const userId = req.session.userId;
+  const name = req.session.name;
+  const daily_sql1 = `select ad.name as username, ad.emp_num, ad.email as user_email, ad.permission, com.name as company_name, dep.name as deployment_name from admins ad left join company com on ad.comp_id = com.id left join deployment dep on ad.deployment_id = dep.id where ad.id = ${userId};`;
+  const user_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
+  console.log(user_info);
+  res.render('daily.ejs', {userId: userId, name: name, user_info: user_info});
+})
+
+//　打刻の打刻による...
+.post('/api/stamp', async (req, res) => {
+  const r = req.body;
+  const userId = req.session.userId;
+
+  if (r.action === 'start') {   // 出勤ボタンが押されたらの処理
+    const invalid_sstamp_sql = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_sresult = await mysql_query(connection, invalid_sstamp_sql, userId);
+    if (invalid_sresult[0]) {  // 既に出勤打刻してあったらinsertしない
+      console.log('もう十分に出勤されています');
+      res.redirect('/') 
+    } else {  // その日の分が打刻されていなかったらinsert
+      const sstamp_sql = 'insert into time_management (admin_id, st_time) VALUES(?, now());'
+      const result = await mysql_query(connection, sstamp_sql, userId);
+      console.log('insert result↓');
+      result ? console.log(result) : console.log('internal server error(仮)');
+      res.status(200)
+      res.redirect('/');
+    }
+  } else {  // 退勤ボタンが押されたらの処理
+    const invalid_estamp_sql = `select * from time_management where admin_id = ? and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_estamp_sql2 = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_eresult = await mysql_query(connection, invalid_estamp_sql, userId);
+    const invalid_eresult2 = await mysql_query(connection, invalid_estamp_sql2, userId);
+    if (invalid_eresult[0]) {// もう既に退勤してる場合
+      console.log("もう退勤してるってば!");
+      res.redirect('/');
+    } else if(invalid_eresult2[0]) {// 出勤打刻されているandまだ退勤がされていなかった場合
+      const estamp_sql = `update time_management set ed_time = now() where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+      const result = await mysql_query(connection, estamp_sql, userId);
+      console.log("update result ↓")
+      result ? console.log(result) : console.log('internal server error');
+      res.status(200)
+      res.redirect('/');
+    } else { // 出勤打刻されていない
+      console.log('まずは出勤してみてほしい')
+      res.redirect('/');
+    }
+  }
+})
+
+// signup page 
 .get("/signup", (req, res) => {
   res.render("signup.ejs", { errors: [] })
 })
@@ -95,9 +198,9 @@ app
     'SELECT * FROM admins WHERE email = ?',
     [email],
     (error, results) => {
-      console.log(`same email is ${JSON.stringify(results)}`);
       if (results.length > 0) {
-        res.redirect('/signup');
+        console.log(`same email is ${JSON.stringify(results)}`);
+        res.render('signup.ejs');
       } else {
         next();
       }
@@ -124,104 +227,10 @@ app
       if (err) {
         console.log(err);
       } else {
-        res.redirect('/siginin');
+        res.redirect('/signin');
       }
     });
   });
-})
-
-.get('/signin', (req, res) => {
-  res.render("singin.ejs")
-})
-
-// signin
-.post('/api/signin', (req, res) => {
-    const r = req.body;
-    const email = r.email;
-    const password = r.password;
-    console.log(`signin email = ${email}`);
-    console.log(`signin password = ${password}`);
-    connection.query(
-        'SELECT * FROM admins WHERE email = ?;',
-        [email],
-        (error, result) => {
-          if (error) {
-            res.send({ message: 'Maybe wrong email/password combination!' })
-            res.redirect('/signin');
-          }
-          if (result.length > 0) {
-            const hash = result[0].password;
-            bcrypt.compare(password, hash, (error, isEqual) => {
-              if (isEqual) {
-                req.session.userId = result[0].id;
-                req.session.name = result[0].name;
-                req.session.email = result[0].email;
-                console.log(`session userId = ${req.session.userId}`);
-                console.log(`session username = ${req.session.name}`);
-                res.redirect('/main');
-              } else {
-                console.log(`error is ${error}`);
-                res.redirect('/signin');
-              }
-            });
-          } else {
-            res.redirect('/signin');
-          }
-        }
-    )
-})
-
-.get('/main', (req, res) => {
-  const userId = req.session.userId;
-  const name = req.session.name;
-  res.render('main.ejs', { userId: userId, name: name});
-})
-
-.get('/daily', (req, res) => {
-  const userId = req.session.userId;
-  const name = req.session.name;
-  res.render('daily.ejs', {userId: userId, name: name});
-})
-
-//　打刻の打刻による...
-.post('/api/stamp', async (req, res) => {
-  const r = req.body;
-  const userId = req.session.userId;
-
-  if (r.action === 'start') {   // 出勤ボタンが押されたらの処理
-    const invalid_sstamp_sql = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_sresult = await mysql_query(connection, invalid_sstamp_sql, userId);
-    if (invalid_sresult[0]) {  // 既に出勤打刻してあったらinsertしない
-      console.log('もう十分に出勤されています');
-      res.redirect('/main') 
-    } else {  // その日の分が打刻されていなかったらinsert
-      const sstamp_sql = 'insert into time_management (admin_id, st_time) VALUES(?, now());'
-      const result = await mysql_query(connection, sstamp_sql, userId);
-      console.log('insert result↓');
-      result ? console.log(result) : console.log('internal server error(仮)');
-      res.status(200)
-      res.redirect('/main');
-    }
-  } else {  // 退勤ボタンが押されたらの処理
-    const invalid_estamp_sql = `select * from time_management where admin_id = ? and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_estamp_sql2 = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_eresult = await mysql_query(connection, invalid_estamp_sql, userId);
-    const invalid_eresult2 = await mysql_query(connection, invalid_estamp_sql2, userId);
-    if (invalid_eresult[0]) {// もう既に退勤してる場合
-      console.log("もう退勤してるってば!");
-      res.redirect('/main');
-    } else if(invalid_eresult2[0]) {// 出勤打刻されているandまだ退勤がされていなかった場合
-      const estamp_sql = `update time_management set ed_time = now() where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-      const result = await mysql_query(connection, estamp_sql, userId);
-      console.log("update result ↓")
-      result ? console.log(result) : console.log('internal server error');
-      res.status(200)
-      res.redirect('/main');
-    } else { // 出勤打刻されていない
-      console.log('まずは出勤してみてほしい')
-      res.redirect('/main');
-    }
-  }
 })
 
 //sign out
@@ -231,7 +240,7 @@ app
       console.log(err)
     } else {
       console.log("session was destroied, sign in again!");
-      res.redirect('/signin')
+      res.redirect('/')
     }
   });
 })
