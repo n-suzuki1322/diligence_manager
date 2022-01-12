@@ -81,7 +81,7 @@ app
   const userId = req.session.userId;
   const name = req.session.name;
   if (userId) {
-    res.render('main.ejs', { userId: userId, name: name});
+    res.render('stamp.ejs', { userId: userId, name: name});
   }else {
     res.render('home.ejs');
   }
@@ -100,42 +100,42 @@ app
   console.log(`signin password = ${password}`);
   connection.query(
     'SELECT * FROM admins WHERE email = ?;',
-        [email],
-        (error, result) => {
-          if (error) {
-            res.send({ message: 'Maybe wrong email/password combination!' })
-            res.redirect('/signin');
-          }
-          if (result.length > 0) {
-            const hash = result[0].password;
-            bcrypt.compare(password, hash, (error, isEqual) => {
-              if (isEqual) {
-                req.session.userId = result[0].id;
-                req.session.name = result[0].name;
-                req.session.email = result[0].email;
-                console.log(`session userId = ${req.session.userId}`);
-                console.log(`session username = ${req.session.name}`);
-                res.redirect('/');
-              } else {
-                console.log(`error is ${error}`);
-                res.redirect('/signin');
-              }
-            });
+    [email],
+    (error, result) => {
+      if (error) {
+        res.send({ message: 'Maybe wrong email/password combination!' })
+        res.redirect('/signin');
+      }
+      if (result.length > 0) {
+        const hash = result[0].password;
+        bcrypt.compare(password, hash, (error, isEqual) => {
+          if (isEqual) {
+            req.session.userId = result[0].id;
+            req.session.name = result[0].name;
+            req.session.email = result[0].email;
+            console.log(`session userId = ${req.session.userId}`);
+            console.log(`session username = ${req.session.name}`);
+            res.redirect('/');
           } else {
+            console.log(`error is ${error}`);
             res.redirect('/signin');
           }
-        }
-        )
+        });
+      } else {
+        res.redirect('/signin');
+      }
+    }
+  )
 })
 
 
 .get('/daily', checkSession, async (req, res) => {
   const userId = req.session.userId;
-  const name = req.session.name;
   const daily_sql1 = `select ad.name as username, ad.emp_num, ad.email as user_email, ad.permission, com.name as company_name, dep.name as deployment_name from admins ad left join company com on ad.comp_id = com.id left join deployment dep on ad.deployment_id = dep.id where ad.id = ${userId};`;
   const user_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
-  console.log(user_info);
-  res.render('daily.ejs', {userId: userId, name: name, user_info: user_info});
+  const daily_sql2 = `select * from time_management where admin_id = ${userId};`;
+  const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
+  res.render('daily.ejs', { userId: userId, user_info: user_info, time_info: time_info });
 })
 
 //　打刻の打刻による...
