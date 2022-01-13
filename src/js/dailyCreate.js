@@ -58,7 +58,7 @@ jQuery(function($) {
         }
         ele.absence === 0 ? "" : absence = "悪霊に取り憑かれた";
         ;
-        ele.holiday === 0 ? "" : holiday = "有給パラダイス";
+        ele.holiday === 0 ? "" : holiday = "○";
         remarks = ele.remarks;
       }
       if (sameDay(d_1, from_t)) {

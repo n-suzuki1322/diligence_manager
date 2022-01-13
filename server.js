@@ -2,7 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const bcrypt = require('bcrypt');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4649;
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -99,11 +99,11 @@ app
   console.log(`signin email = ${email}`);
   console.log(`signin password = ${password}`);
   connection.query(
-    'SELECT * FROM admins WHERE email = ?;',
+    'SELECT * FROM users WHERE email = ?;',
     [email],
     (error, result) => {
       if (error) {
-        res.send({ message: 'Maybe wrong email/password combination!' })
+        console.log('maybe send wrong password or email');
         res.redirect('/signin');
       }
       if (result.length > 0) {
@@ -131,9 +131,9 @@ app
 
 .get('/daily', checkSession, async (req, res) => {
   const userId = req.session.userId;
-  const daily_sql1 = `select ad.name as username, ad.emp_num, ad.email as user_email, ad.permission, com.name as company_name, dep.name as deployment_name from admins ad left join company com on ad.comp_id = com.id left join deployment dep on ad.deployment_id = dep.id where ad.id = ${userId};`;
+  const daily_sql1 = `select us.name as username, us.emp_num, us.email as user_email, com.name as company_name, dep.name as deployment_name from users us left join company com on ad.comp_id = com.id left join deployment dep on ad.deployment_id = dep.id where ad.id = ${userId};`;
   const user_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
-  const daily_sql2 = `select * from time_management where admin_id = ${userId};`;
+  const daily_sql2 = `select * from time_management where user_id = ${userId};`;
   const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
   res.render('daily.ejs', { userId: userId, user_info: user_info, time_info: time_info });
 })
@@ -144,13 +144,13 @@ app
   const userId = req.session.userId;
 
   if (r.action === 'start') {   // 出勤ボタンが押されたらの処理
-    const invalid_sstamp_sql = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_sstamp_sql = `select * from time_management where user_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
     const invalid_sresult = await mysql_query(connection, invalid_sstamp_sql, userId);
     if (invalid_sresult[0]) {  // 既に出勤打刻してあったらinsertしない
       console.log('もう十分に出勤されています');
       res.redirect('/') 
     } else {  // その日の分が打刻されていなかったらinsert
-      const sstamp_sql = 'insert into time_management (admin_id, st_time) VALUES(?, now());'
+      const sstamp_sql = 'insert into time_management (user_id, st_time) VALUES(?, now());'
       const result = await mysql_query(connection, sstamp_sql, userId);
       console.log('insert result↓');
       result ? console.log(result) : console.log('internal server error(仮)');
@@ -158,15 +158,15 @@ app
       res.redirect('/');
     }
   } else {  // 退勤ボタンが押されたらの処理
-    const invalid_estamp_sql = `select * from time_management where admin_id = ? and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_estamp_sql2 = `select * from time_management where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_estamp_sql = `select * from time_management where user_id = ? and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_estamp_sql2 = `select * from time_management where user_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
     const invalid_eresult = await mysql_query(connection, invalid_estamp_sql, userId);
     const invalid_eresult2 = await mysql_query(connection, invalid_estamp_sql2, userId);
     if (invalid_eresult[0]) {// もう既に退勤してる場合
       console.log("もう退勤してるってば!");
       res.redirect('/');
     } else if(invalid_eresult2[0]) {// 出勤打刻されているandまだ退勤がされていなかった場合
-      const estamp_sql = `update time_management set ed_time = now() where admin_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+      const estamp_sql = `update time_management set ed_time = now() where user_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
       const result = await mysql_query(connection, estamp_sql, userId);
       console.log("update result ↓")
       result ? console.log(result) : console.log('internal server error');
@@ -195,7 +195,7 @@ app
     res.render('signup.ejs') 
   }
   connection.query(
-    'SELECT * FROM admins WHERE email = ?',
+    'SELECT * FROM users WHERE email = ?',
     [email],
     (error, results) => {
       if (results.length > 0) {
@@ -231,6 +231,11 @@ app
       }
     });
   });
+})
+
+/*workflow part */
+.get('/workflow', (req, res) => {
+  res.render("workflow.ejs", { errors: [] })
 })
 
 //sign out
