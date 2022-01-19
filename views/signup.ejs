@@ -7,8 +7,7 @@
 </head>
 
 <body>
-  <p class="inline-block mr-2 text-gray-300 hide-sm">Already have an account?</p>
-  <a href="/signin" class="inline-block text-sm px-4 py-2 leading-none text-red-400 mt-4 lg:mt-0">Sign In →</a>
+  <a href="/signin" class="inline-block text-sm px-4 py-2 leading-none text-red-400 mt-4 lg:mt-0">アカウントをお持ちの方はこちら →</a>
   <div class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div>
@@ -26,15 +25,19 @@
         <input type="hidden" name="remember" value="true" />
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
-            <label html-for="name" class="sr-only">User Name</label>
+            <label html-for="name" class="sr-only">氏名</label>
             <input id="name" name="name" type="text" auto-complete="name" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="名前を入力してください" required />
           </div>
           <div>
-            <label html-for="email-address" class="sr-only">Email address</label>
+            <label html-for="name" class="sr-only">フリガナ</label>
+            <input id="read" name="read" type="text" auto-complete="username" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="フリガナを入力してください" required />
+          </div>
+          <div>
+            <label html-for="email-address" class="sr-only">Eメール</label>
             <input id="email-address" name="email" type="email" auto-complete="email" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Eメールを入力してください" required />
           </div>
           <div>
-            <label html-for="password" class="sr-only">Password</label>
+            <label html-for="password" class="sr-only">パスワード</label>
             <input id="password" name="password" type="password" auto-complete="current-password" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="パスワードを入力してください" required />
           </div>
         </div>
@@ -58,7 +61,7 @@
                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
               </svg>
             </span>
-            Sign Up!
+            登録
           </button>
         </div>
       </form>

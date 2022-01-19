@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ワークフロー</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/custom.css">
+  </head>
+  <body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;" cz-shortcut-listen="true">
+    <%- include('../components/_header')  %>
+    <input type="button" value="戻る" onclick="history.back()" >
+    <div class="flex flex-col">
+      <div id="title" class="flex">ワークフロー設定</div>
+      <div class="flex">
+        <div id="workflow-li" class=" bg-black flex-1">作成済みワークフロー一覧</div>
+        <div id="workflow-cr" class="flex-1">
+          <button type="button" onclick="location.href='/workflow/create_pathway'" class="mx-auto lg:mx-0 w-full hover:underline gradient my-2 py-2 px-8 rounded-full text-5xl font-bold leading-tight text-center text-white shadow-lg">作成する</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
