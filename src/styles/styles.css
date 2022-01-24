@@ -1181,6 +1181,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   -webkit-text-decoration-line: none;
           text-decoration-line: none;
 }
+.decoration-sky-500 {
+  -webkit-text-decoration-color: #0ea5e9;
+          text-decoration-color: #0ea5e9;
+}
 .antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

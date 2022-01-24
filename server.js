@@ -11,7 +11,7 @@ const SALT = 10;
 
 // manage session
 const session = require("express-session");
-const { json } = require("express/lib/response");
+const { json, status } = require("express/lib/response");
 
 app
 .use(
@@ -375,22 +375,32 @@ app
 
   const sql = `select * from pathways where id = ${pathway_id};`;
   const pathways = JSON.parse(JSON.stringify(await mysql_query(connection, sql)));
-  const role_ids = pathways[0].role_ids.split(',').map(Number);
   const user_ids = pathways[0].user_ids.split(',').map(Number);
+  const role_ids = pathways[0].role_ids.split(',').map(Number);
+  const category_ids = pathways[0].category_ids.split(',').map(Number);
   const applicant_index = role_ids.indexOf(7)
   user_ids[applicant_index] = userId;
-  let json_is_comp = '';
-  let n = 0;
-  while (n < user_ids.length) {
-    json_is_comp += "null,";
-    n++
-  }
-  const json_text = json_is_comp.slice(0, - 2);
 
-  const workflow_insert_statement = `insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks, is_completes) VALUES (?, ?, ?, ?, ?, ?, ?);`;
+  // insert to workflow table
+  const workflow_insert_statement = `
+  insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks) VALUES (?, ?, ?, ?, ?, ?);`;
+  await mysql_query(connection, workflow_insert_statement, [userId, pathway_id, leaf_type, st_date, ed_date, remarks]);
+  // get insertId part
+  const insert_intermidiates_query_pre = "select id from workflows where id = (select max(id) from workflows);";
+  const last_record = await mysql_query(connection, insert_intermidiates_query_pre);
+  const maxid = last_record[0].id;
+
+  //insert intermidiates _workflow table
+  let insert_intermidiates_query = '';
+  let n = 0;
+  while (n < role_ids.length) {
+    insert_intermidiates_query += `insert into intermidiates_workflow (workflow_id, category_id, role_id, user_id) VALUES (${maxid}, ${category_ids[n]}, ${role_ids[n]}, ${user_ids[n]});`;
+    n++;
+  }
+  console.log(insert_intermidiates_query);
+
   connection.query(
-    workflow_insert_statement,
-    [userId, pathway_id, leaf_type, st_date, ed_date, remarks, json_text],
+    insert_intermidiates_query,
     (err, result) => {
       if (err) {
         console.log(err);
@@ -398,7 +408,7 @@ app
       } else {
         console.log("result↓");
         console.log(result);
-        res.redirect('/workflow/apply')
+        res.redirect('/sendls');
       }
     }
   );
@@ -419,7 +429,7 @@ app
   const user_query = `select * from users where id = ${userId};`;
   const user = await mysql_query(connection, user_query);
   const workflow_query = `
-  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_completes, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids
+  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids
   from workflows wf
   left join pathways pw on wf.pathway_id = pw.id 
   left join deployment dep on pw.dep_id = dep.id
@@ -458,7 +468,6 @@ app
     }
     pathway_parr.push(pathway_carr);
   }
-  console.log(workflow[0].is_completes);
 
   res.render("workflow/send_confirm.ejs", { errors: [], user: user, workflow: workflow, route_check: pathway_parr });
 })
@@ -474,6 +483,65 @@ app
       err ? console.log(err) : res.redirect('/sendls');
     }
   )
+})
+
+.get('/receiptls', checkSession, async (req, res) => {
+  const userId = req.session.userId;
+  
+  const receipt_workflow_sql = `
+  select wf.id, pw.name pathway_name, us.name as user_name from intermidiates_workflow iw 
+  left join workflows wf on iw.workflow_id = wf.id
+  left join users us on wf.user_id = us.id
+  left join pathways pw on wf.pathway_id = pw.id
+  where iw.user_id = ${userId};`
+  const receipt_workflows = await mysql_query(connection, receipt_workflow_sql);
+  res.render("workflow/receiptls.ejs", { errors: [], receipt_workflows: receipt_workflows });
+})
+
+
+.get('/receipt_confirm/:id', checkSession, async (req, res) => {
+  const userId = req.session.userId;
+  const workflow_id = req.params.id | 0;
+  const sql = `
+  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids
+  from workflows wf
+  left join pathways pw on wf.pathway_id = pw.id 
+  left join deployment dep on pw.dep_id = dep.id
+  left join leaf_types lef on wf.leaf_type = lef.id
+  where wf.id = ${workflow_id}`;
+  const workflow = await mysql_query(connection, sql);
+
+  const status_sql = `select category_id, role_id, user_id, is_complete from intermidiates_workflow where workflow_id = ${workflow_id};`;
+  const status = await mysql_query(connection, status_sql);
+  let status_parr = [];
+  let a_l = status.length;
+  let n = 0;
+  while (n < a_l) {
+    let status_carr = [];  //children_array
+
+    // category part
+    const category_query = `select name from pathway_categories where id = ${status[n].category_id};`;
+    const category = JSON.parse(JSON.stringify(await mysql_query(connection, category_query)));
+    status_carr.push(category[0].name);
+
+    // role part
+    const role_query = `select id, name from pathway_roles where id = ${status[n].role_id};`;
+    const role = JSON.parse(JSON.stringify(await mysql_query(connection, role_query)));
+    status_carr.push(role[0].name);
+
+    // user part
+    const processor_query = `select name from users where id = ${status[n].user_id};`;
+    const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
+    status_carr.push(processor[0].name);
+
+    //is_complete
+    status_carr.push(status[n].is_complete);
+
+    status_parr.push(status_carr);
+    n++;
+  }
+
+  res.render("workflow/receipt_confirm.ejs", { errors: [], workflow: workflow, status: status_parr });
 })
 
 //sign out

@@ -9,12 +9,9 @@
   </head>
   <body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;" cz-shortcut-listen="true">
     <input type="hidden" id="workflow" value=<%= JSON.stringify(workflow) %> />
-    <input type="hidden" id="route_check" value=<%= JSON.stringify(route_check) %> />
+    <input type="hidden" id="status" value=<%= JSON.stringify(status) %> />
     <%- include('../components/_header')  %>
     <button onclick="history.back()">戻る</button>
-    <form >
-      <input type="button" class="text-2xl underline decoration-sky-500" id="delete_sendthisis" name="delete_sendthisis" size="30" value="送信一覧から削除する">
-    </form>
     <h1>id: <%= workflow[0].id %> <%= workflow[0].pathway_name%></h1>
 
 
@@ -23,7 +20,6 @@
         <tr valign="top">
           <th rowspan="1" align="left" nowrap="">申請者</th>
           <td>
-            <input type="text" name="username" id="username" class="text-slate-900 text-xl" value=<%= user[0].name%> readonly="readonly" />
           </td>
         </tr>
 
@@ -110,6 +106,8 @@
           <th nowrap="">経路種別</th>
           <th nowrap="">役割</th>
           <th nowrap="">処理者</th>
+          <th nowrap="">結果</th>
+          <th nowrap="">日時</th>
         </tr>
       </thead>
       <tbody id="pathway_tbody" name="pathway">
@@ -118,8 +116,7 @@
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const workflow = JSON.parse(document.getElementById('workflow').value);
-        const route_check = JSON.parse(document.getElementById('route_check').value);
-        const delete_sendthisis = document.getElementById('delete_sendthisis');
+        const status = JSON.parse(document.getElementById('status').value);
         const apply_date = document.getElementById('apply_date');
         const deployment = document.getElementById('deployment');
         const st_date = document.getElementById('st_date');
@@ -127,21 +124,7 @@
         const pathway_tbody = document.getElementById('pathway_tbody');
         const leaf_type = document.getElementById("leaf_type");
         
-        // 送信一覧から論理削除api
-        const delete_send = () => {
-          const data = [{"id": workflow[0].id}];
-          fetch(`/api/delete_sendthisis/${workflow[0].id}`, {
-            method: 'GET',
-          }).then((data)  => {
-              location.href = data.url;
-          }).catch((error) => {
-              console.log(error);
-          });
-        }
         
-        delete_sendthisis.addEventListener('click', delete_send, false);
-
-
 
         leaf_type.innerHTML = workflow[0].leaf_type;
         apply_date.value = getDateWithString(new Date(workflow[0].apply_date));
@@ -157,24 +140,25 @@
           return result;
         }
 
-        // leaf_types.forEach(leaf_type => {
-        //   $('#leaf_type').append(`<option value=${leaf_type.id}>${leaf_type.name}</option>`);
-        // });
-        
-
-        for (let i = 0; i < route_check.length; i++) {
+        for (let i = 0; i < status.length; i++) {
           let tr = document.createElement('tr');
-          for (let u = 0; u < 3; u++) {
+          for (let u = 0; u < 5; u++) {
             let td = document.createElement("td");
             switch (u) {
               case 0:
-                td.innerHTML = route_check[i][u];
+                td.innerHTML = status[i][u];
                 break;
               case 1:
-                td.innerHTML = route_check[i][u];
+                td.innerHTML = status[i][u];
                 break;
               case 2:
-                td.innerHTML = route_check[i][u];
+                td.innerHTML = status[i][u];
+                break;
+              case 3:
+                status[i][u] == null ? td.innerHTML = "未完" : td.innerHTML = "承認";
+                break;
+              case 4:
+                status[i][3] != null ? td.innerHTML = status[i][3] : "";
                 break;
             }
             tr.appendChild(td);
