@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
-    const date = today.getDate();
     const dayOfWeekStrJP = [ "日", "月", "火", "水", "木", "金", "土" ];
 
     /** monthly days count */

@@ -299,11 +299,11 @@ app
   )
 })
 
-
 // workflowのフォームを選択する画面
 .get('/workflow/apply', checkSession, async (req, res) => {
   const pathway_sql = "select id, name, dep_id, category_ids, role_ids, user_ids from pathways;";
   const pathways = await mysql_query(connection, pathway_sql);
+  console.log(pathways);
   res.render("workflow/apply.ejs", { errors: [], pathways: pathways });
 })
 
@@ -355,7 +355,6 @@ app
   res.render("workflow/apply_main.ejs", { errors: [], pathway: pathway, user: user, leaf_types: leaf_types, route_check: pathway_parr });
 })
 
-
 // create workflow
 .post('/api/create_workflow', async (req, res) => {
   const r = req.body;
@@ -380,17 +379,18 @@ app
   const user_ids = pathways[0].user_ids.split(',').map(Number);
   const applicant_index = role_ids.indexOf(7)
   user_ids[applicant_index] = userId;
-  let json_is_comp = "";
-  user_ids.forEach(user_id => {
-    json_is_comp += `${user_id}: "", `
-  });
-  const json_text = `{ ${json_is_comp.slice(0, - 2)} }`;
-  const json_text_a = JSON.stringify(json_text);
+  let json_is_comp = '';
+  let n = 0;
+  while (n < user_ids.length) {
+    json_is_comp += "null,";
+    n++
+  }
+  const json_text = json_is_comp.slice(0, - 2);
 
-  const workflow_insert_statement = `insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks, is_completes) VALUES(?, ?, ?, ?, ?, ?, ?);`;
+  const workflow_insert_statement = `insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks, is_completes) VALUES (?, ?, ?, ?, ?, ?, ?);`;
   connection.query(
     workflow_insert_statement,
-    [userId, pathway_id, leaf_type, st_date, ed_date, remarks, json_text_a],
+    [userId, pathway_id, leaf_type, st_date, ed_date, remarks, json_text],
     (err, result) => {
       if (err) {
         console.log(err);
@@ -402,11 +402,82 @@ app
       }
     }
   );
+})
 
+// workflow送信一覧
+.get('/sendls', async (req, res) => {
+  const userId = req.session.userId;
+  
+  const workflow_sql = `select wf.id, pw.name from workflows wf left join pathways pw on pw.id = wf.pathway_id where  wf.is_deleted = 0  and wf.user_id = ${userId};`;
+  const send_workflows = await mysql_query(connection, workflow_sql);
+  res.render("workflow/sendls.ejs", { errors: [], send_workflows: send_workflows });
+})
+
+.get('/send_confirm/:id', checkSession, async (req, res) => {
+  const userId = req.session.userId;
+  const workflow_id = req.params.id | 0;
+  const user_query = `select * from users where id = ${userId};`;
+  const user = await mysql_query(connection, user_query);
+  const workflow_query = `
+  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_completes, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids
+  from workflows wf
+  left join pathways pw on wf.pathway_id = pw.id 
+  left join deployment dep on pw.dep_id = dep.id
+  left join leaf_types lef on wf.leaf_type = lef.id
+  where wf.id = ${workflow_id} and wf.is_deleted = 0;`;
+  const workflow = await mysql_query(connection, workflow_query);
+  const category_arr = workflow[0].category_ids.split(',').map(Number);
+  const role_arr = workflow[0].role_ids.split(',').map(Number);
+  const user_arr = workflow[0].user_ids.split(',').map(Number);
+
+  let pathway_parr = [];  //parent
+  let i = 0;
+  let a_l = category_arr.length;
+  for(; i < a_l; i++) {
+    let pathway_carr = [];  //children_array
+
+    // category part
+    const category_query = `select name from pathway_categories where id = ${category_arr[i]};`;
+    const category = JSON.parse(JSON.stringify(await mysql_query(connection, category_query)));
+    pathway_carr.push(category[0].name);
+    
+    // role part
+    const role_query = `select id, name from pathway_roles where id = ${role_arr[i]};`;
+    const role = JSON.parse(JSON.stringify(await mysql_query(connection, role_query)));
+    pathway_carr.push(role[0].name);
+
+    // processor part
+    if (role[0].id == 7) {
+      const processor_query = `select name from users where id = ${userId};`;
+      const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
+      pathway_carr.push(processor[0].name);
+    } else {
+      const processor_query = `select name from users where id = ${user_arr[i]};`;
+      const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
+      pathway_carr.push(processor[0].name);
+    }
+    pathway_parr.push(pathway_carr);
+  }
+  console.log(workflow[0].is_completes);
+
+  res.render("workflow/send_confirm.ejs", { errors: [], user: user, workflow: workflow, route_check: pathway_parr });
+})
+
+.get('/api/delete_sendthisis/:id', async (req, res) => {
+  const del_target_id = req.params.id | 0;
+  const delete_send_query = `update workflows set is_deleted = 1 where id = ${del_target_id};`;
+  connection.query(
+    delete_send_query,
+    (err, result) => {
+      console.log("result ↓");
+      console.log(result);
+      err ? console.log(err) : res.redirect('/sendls');
+    }
+  )
 })
 
 //sign out
-.get('/api/signout', (req, res) => {
+.get('/api/signout', checkSession, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.log(err);
