@@ -1,14 +1,39 @@
-<header class="text-gray-600 body-font">
+<header id="header" class="text-gray-600 body-font">
   <div class="container mx-auto flex flex-wrap p-10 flex-row md:flex-row items-center">
     <nav class="md:ml-auto flex flex-wrap items-center text-base justify-center">
       <a href='/' class="mr-5 hover:text-gray-900">打刻</a>
       <a href="/daily" class="mr-5 hover:text-gray-900">日時勤怠</a>
       <a href="/workflow" class="mr-5 hover:text-gray-900">ワークフロー</a>
     </nav>
-    <a href="/api/signout" class="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0">Sign Out
-      <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-1" viewBox="0 0 24 24">
-        <path d="M5 12h14M12 5l7 7-7 7"></path>
-      </svg>
-    </a>
+    
+    <div class="sc-fmciRz flex align-center py-1 px-2" id="toggle-button">
+      <img src="https://appdata.chatwork.com/avatar/Yq9xNBwNMW.rsz.jpg" alt="" class="h-6 w-6 rounded-full iGbkvS">
+      <div class="sc-gjNHFA dwcxxh">
+        <span class="sc-dkPtRN iNddGF">
+          <svg viewBox="0 0 10 10" width="16" height="16" class="sc-hKwDye jZRoVM" aria-hidden="true">
+            <use fill-rule="evenodd" xlink:href="#icon_triangleDown"></use>
+          </svg>
+        </span>
+      </div>
+    </div>
+    <div id="menu-bar" aria-hidden="true" class="origin-top-right w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1" >
+      <div class="py-1" role="none">
+        <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">Account settings</a>
+        <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Support</a>
+        <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-2">License</a>
+        <a href="/api/signout" class="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0">Sign Out
+          <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-1" viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
   </div>
 </header>
+<script>
+  const toggle_button = document.getElementById('toggle-button');
+  const menu_bar = document.getElementById('menu-bar');
+  toggle_button.addEventListener('click', () => {
+    menu_bar.getAttribute('aria-hidden') === "true" ? menu_bar.setAttribute("aria-hidden", "false") : menu_bar.setAttribute("aria-hidden", "true") ;
+  })
+</script>

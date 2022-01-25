@@ -20,6 +20,18 @@ hr {
   display: none;
 }
 
+[aria-hidden="true"] {
+  display: none;	
+}
+
+[aria-hidden="false"] {
+	display: block;
+}
+
+*:not(svg)[aria-hidden="true"]{
+  display: none;	
+}
+
 .gradient {
   background: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 }
