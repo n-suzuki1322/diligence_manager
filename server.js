@@ -12,6 +12,7 @@ const SALT = 10;
 // manage session
 const session = require("express-session");
 const { json, status } = require("express/lib/response");
+const res = require("express/lib/response");
 
 app
 .use(
@@ -418,7 +419,11 @@ app
 .get('/sendls', async (req, res) => {
   const userId = req.session.userId;
   
-  const workflow_sql = `select wf.id, pw.name from workflows wf left join pathways pw on pw.id = wf.pathway_id where  wf.is_deleted = 0  and wf.user_id = ${userId};`;
+  const workflow_sql = `
+  select wf.id, pw.name, wf.is_complete
+  from workflows wf 
+  left join pathways pw on pw.id = wf.pathway_id 
+  where wf.is_deleted = 0  and wf.user_id = ${userId};`;
   const send_workflows = await mysql_query(connection, workflow_sql);
   res.render("workflow/sendls.ejs", { errors: [], send_workflows: send_workflows });
 })
@@ -436,40 +441,38 @@ app
   left join leaf_types lef on wf.leaf_type = lef.id
   where wf.id = ${workflow_id} and wf.is_deleted = 0;`;
   const workflow = await mysql_query(connection, workflow_query);
-  const category_arr = workflow[0].category_ids.split(',').map(Number);
-  const role_arr = workflow[0].role_ids.split(',').map(Number);
-  const user_arr = workflow[0].user_ids.split(',').map(Number);
 
-  let pathway_parr = [];  //parent
-  let i = 0;
-  let a_l = category_arr.length;
-  for(; i < a_l; i++) {
-    let pathway_carr = [];  //children_array
+  const status_sql = `select category_id, role_id, user_id, is_complete from intermidiates_workflow where workflow_id = ${workflow_id};`;
+  const status = await mysql_query(connection, status_sql);
+  let status_parr = [];
+  let a_l = status.length;
+  let n = 0;
+  while (n < a_l) {
+    let status_carr = [];  //children_array
 
     // category part
-    const category_query = `select name from pathway_categories where id = ${category_arr[i]};`;
+    const category_query = `select name from pathway_categories where id = ${status[n].category_id};`;
     const category = JSON.parse(JSON.stringify(await mysql_query(connection, category_query)));
-    pathway_carr.push(category[0].name);
-    
-    // role part
-    const role_query = `select id, name from pathway_roles where id = ${role_arr[i]};`;
-    const role = JSON.parse(JSON.stringify(await mysql_query(connection, role_query)));
-    pathway_carr.push(role[0].name);
+    status_carr.push(category[0].name);
 
-    // processor part
-    if (role[0].id == 7) {
-      const processor_query = `select name from users where id = ${userId};`;
-      const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
-      pathway_carr.push(processor[0].name);
-    } else {
-      const processor_query = `select name from users where id = ${user_arr[i]};`;
-      const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
-      pathway_carr.push(processor[0].name);
-    }
-    pathway_parr.push(pathway_carr);
+    // role part
+    const role_query = `select id, name from pathway_roles where id = ${status[n].role_id};`;
+    const role = JSON.parse(JSON.stringify(await mysql_query(connection, role_query)));
+    status_carr.push(role[0].name);
+
+    // user part
+    const processor_query = `select name from users where id = ${status[n].user_id};`;
+    const processor = JSON.parse(JSON.stringify(await mysql_query(connection, processor_query)));
+    status_carr.push(processor[0].name);
+
+    //is_complete
+    status_carr.push(status[n].is_complete);
+
+    status_parr.push(status_carr);
+    n++;
   }
 
-  res.render("workflow/send_confirm.ejs", { errors: [], user: user, workflow: workflow, route_check: pathway_parr });
+  res.render("workflow/send_confirm.ejs", { errors: [], user: user, workflow: workflow, status: status_parr });
 })
 
 .get('/api/delete_sendthisis/:id', async (req, res) => {
@@ -489,7 +492,8 @@ app
   const userId = req.session.userId;
   
   const receipt_workflow_sql = `
-  select wf.id, pw.name pathway_name, us.name as user_name from intermidiates_workflow iw 
+  select wf.id, pw.name pathway_name, us.name as user_name, wf.is_complete
+  from intermidiates_workflow iw 
   left join workflows wf on iw.workflow_id = wf.id
   left join users us on wf.user_id = us.id
   left join pathways pw on wf.pathway_id = pw.id
@@ -500,15 +504,15 @@ app
 
 
 .get('/receipt_confirm/:id', checkSession, async (req, res) => {
-  const userId = req.session.userId;
   const workflow_id = req.params.id | 0;
   const sql = `
-  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids
+  select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids, wf.is_complete
   from workflows wf
   left join pathways pw on wf.pathway_id = pw.id 
   left join deployment dep on pw.dep_id = dep.id
   left join leaf_types lef on wf.leaf_type = lef.id
-  where wf.id = ${workflow_id}`;
+  where wf.id = ${workflow_id}
+  `;
   const workflow = await mysql_query(connection, sql);
 
   const status_sql = `select category_id, role_id, user_id, is_complete from intermidiates_workflow where workflow_id = ${workflow_id};`;
@@ -542,6 +546,21 @@ app
   }
 
   res.render("workflow/receipt_confirm.ejs", { errors: [], workflow: workflow, status: status_parr });
+})
+
+.get('/api/receipt_confirm/:id', checkSession, async (req, res) => {
+  const confirm_target_id = req.params.id | 0;
+  const userId = req.session.userId;
+  const sql = `
+  update intermidiates_workflow set is_complete = now() where (workflow_id = ${confirm_target_id}) and (user_id = ${userId});
+  update workflows set is_complete = 1
+  where id = ${confirm_target_id} and not exists (
+  select * from intermidiates_workflow
+  WHERE (workflow_id = ${confirm_target_id}) and is_complete is null
+  );
+  `;
+  const result = await mysql_query(connection, sql);
+  res.end(JSON.stringify({ updates: result }));
 })
 
 //sign out

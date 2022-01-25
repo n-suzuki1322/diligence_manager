@@ -11,13 +11,15 @@
     <input type="hidden" id="receipt_workflows" value=<%= JSON.stringify(receipt_workflows)%>>
     <%- include('../components/_header')  %>
     <a href="/workflow">戻る</a>
-    <p>送信一覧</p>
+    <p>受信一覧</p>
     <ul id="receipt_ls" class="flex flex-col"></ul>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const receipt_workflows = JSON.parse(document.getElementById('receipt_workflows').value);
         receipt_workflows.forEach(workflow => {
-          $('#receipt_ls').append(`<li><a href="/receipt_confirm/${workflow.id}">id: ${workflow.id} 申請者名: ${workflow.user_name} name: ${workflow.pathway_name}</a></li>`)
+          let status_text;
+          workflow.is_complete ===1 ? status_text = "完了" : status_text = "まだ";
+          $('#receipt_ls').append(`<li><a href="/receipt_confirm/${workflow.id}">id: ${workflow.id} 申請者名: ${workflow.user_name} name: ${workflow.pathway_name} KPI: ${status_text}</a></li>`)
         });
       })
     </script>

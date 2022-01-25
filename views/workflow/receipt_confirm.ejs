@@ -113,6 +113,11 @@
       <tbody id="pathway_tbody" name="pathway">
       </tbody>
     </table>
+    <% if (workflow[0].is_complete == 0) { %>
+      <div class="text-center">
+        <button id="confirm_button" class="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">確認する</button>
+      </div>
+    <% } %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const workflow = JSON.parse(document.getElementById('workflow').value);
@@ -123,10 +128,10 @@
         const ed_date = document.getElementById('ed_date');
         const pathway_tbody = document.getElementById('pathway_tbody');
         const leaf_type = document.getElementById("leaf_type");
+        const confirm_button = document.getElementById("confirm_button");
         
-        
-
         leaf_type.innerHTML = workflow[0].leaf_type;
+
         apply_date.value = getDateWithString(new Date(workflow[0].apply_date));
         st_date.value = getDateWithString(new Date(workflow[0].st_date));
         ed_date.value = getDateWithString(new Date(workflow[0].ed_date));
@@ -158,14 +163,27 @@
                 status[i][u] == null ? td.innerHTML = "未完" : td.innerHTML = "承認";
                 break;
               case 4:
-                status[i][3] != null ? td.innerHTML = status[i][3] : "";
+                status[i][3] != null ? td.innerHTML = getDateWithString(status[i][3]) : "";
                 break;
             }
             tr.appendChild(td);
           }
           pathway_tbody.appendChild(tr);
         }
+        
 
+        // 承認api
+        const receipt_confirm = () => {
+          fetch(`/api/receipt_confirm/${workflow[0].id}`, {
+            method: 'GET',
+          }).then((data)  => {
+              console.log(data);
+          }).catch((error) => {
+              console.log(error);
+          });
+        };
+
+        confirm_button.addEventListener('click', receipt_confirm, false)
       })
     </script>
   </body>
