@@ -36,15 +36,15 @@ document.addEventListener('DOMContentLoaded', function() {
     for (let i = 0; i < days; i++) {
       const s = i+1;// 日にち取得
       const d_1 = new Date(year, month, s);
-      const t = `<div id="day${d_1.getDay()}">${dayOfWeekStrJP[d_1.getDay()]}</div>`;// 曜日取得
+      const t = dayOfWeekStrJP[d_1.getDay()];// 曜日取得
       let st_time = '';
       let ed_time = '';
       let work_hours = "00:00";
       let overworks = "00:00";
       let nightworks = "00:00";
-      let absence = "";
-      let holiday = "";
-      let remarks = "";
+      let absence = `<select id="absence${i+1}"><option selected></option><option>◯</option></select>`;
+      let holiday = `<select id="holiday${i+1}"><option selected></option><option>◯</option></select>`;
+      let remarks = `<input type="text" value="">`;
       time_info.forEach(ele => {
         const from_t = new Date(ele.st_time);
         const to_t = new Date(ele.ed_time);
@@ -73,9 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
               overworks = `${('00'+over_h).slice(-2)}:${('00'+over_m).slice(-2)}`;
             }
           }
-          ele.absence !== 1 ? "" : absence = "◯";
-          ele.holiday !== 1 ? "" : holiday = "○";
-          remarks = ele.remarks;
+          ele.absence !== 1 ? "" : absence = `<select id="absence${i+1}"><option></option><option selected>◯</option></select>`;
+          ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}"><option></option><option selected>◯</option></select>`;
+          remarks = `<input type="text" value=${ele.remarks}>`;
         }
         if (sameDay(d_1, from_t)) {
           st_time = String(from_t).match(/\d{2}:\d{2}/)[0];
@@ -102,22 +102,15 @@ document.addEventListener('DOMContentLoaded', function() {
       data: dates,
       searching: false,
       info: false,
+      searching: false,
       ordering: false,
       lengthChange: false,
-      displayLength: days,
+      displayLength: 31,
       paging: false,
       width: "10px",
+      columnDefs :[
+        {targets:'_all',className : 'dt-body-center'},
+      ],
     })
   })
 })
-
-setTimeout(() => {
-  const day0 = document.querySelectorAll('#day0');
-  const day6 = document.querySelectorAll('#day6');
-  day0.forEach(d => {
-    d.parentNode.parentNode.classList.add('rest');
-  });
-  day6.forEach(d => {
-    d.parentNode.parentNode.classList.add('rest');
-  });
-}, 100);
