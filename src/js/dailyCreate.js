@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return new Date(y, m, 0).getDate();
     };
 
+    const getSerial = (date) => {
+      return date.getHours() * 60 + date.getMinutes();
+    }
+
     const sameDay = (a, b) => {
       const c = a.getFullYear() + a.getMonth() + a.getDate()
       const d = b.getFullYear() + b.getMonth() + b.getDate()
@@ -30,12 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let dates = [];
     for (let i = 0; i < days; i++) {
       const s = i+1;// 日にち取得
-      const d_1 = new Date(year, month, i+1);
+      const d_1 = new Date(year, month, s);
       const t = dayOfWeekStrJP[d_1.getDay()];// 曜日取得
       let st_time = '';
       let ed_time = '';
       let work_hours = "00:00";
-      let night_work_hours = "0:00";
+      let overworks = "00:00";
+      let nightworks = "00:00";
       let absence = "";
       let holiday = "";
       let remarks = "";
@@ -43,18 +48,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const from_t = new Date(ele.st_time);
         const to_t = new Date(ele.ed_time);
         if (sameDay(d_1, from_t) && sameDay(d_1, to_t)) {
-          const work_milliseconds = to_t.getTime() - from_t.getTime();
-          const h = Math.floor(work_milliseconds / (60 * 60 * 1000));
-          const m = Math.ceil((work_milliseconds - h * 60 * 60 * 1000) / 60000);
-          /* 実労働時間取得(現状: 秒単位切り上げ)*/
+          // work hours
+          const h = Math.floor((getSerial(to_t) - getSerial(from_t) - 60) / 60);
+          const m = (getSerial(to_t) - getSerial(from_t) - 60) % 60;
           work_hours = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-
-          const night_work_milliseconds = to_t.getTime() - d_1.setHours(22);
-          if (night_work_milliseconds > 0) {
-            const h_2 = Math.floor(night_work_milliseconds / (60 * 60 * 1000))
-            const m_2 = Math.floor((night_work_milliseconds - h_2 * 60 * 60 * 1000) / 60000);
-            /* 深夜勤務時間取得*/
-            night_work_hours = `${h_2}:${('00'+m_2).slice(-2)}`;
+          if (getSerial(to_t) > 1320) {
+            //nightworks
+            const night_h = Math.floor((getSerial(to_t) - 60 * 22) / 60);
+            const night_m = (getSerial(to_t) - 60 * 22) % 60;
+            nightworks = `${('00'+night_h).slice(-2)}:${('00'+night_m).slice(-2)}`;
+            // overworks
+            const over = 60 * 13 - getSerial(from_t);
+            if (over > 0) {
+              const over_h = Math.floor(over/ 60);
+              const over_m = over % 60;
+              overworks = `${('00'+over_h).slice(-2)}:${('00'+over_m).slice(-2)}`;
+            }
+          } else {
+            const over = getSerial(to_t) - getSerial(from_t) - 60 * 9;
+            if(over > 0) {
+              const over_h = Math.floor(over/ 60);
+              const over_m = over % 60;
+              overworks = `${('00'+over_h).slice(-2)}:${('00'+over_m).slice(-2)}`;
+            }
           }
           ele.absence === 0 ? "" : absence = "悪霊に取り憑かれた";
           ;
@@ -67,7 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if(sameDay(d_1, to_t)) {
           ed_time = String(to_t).match(/\d{2}:\d{2}/)[0];
         }
-        
       });
       dates.push([
         s,  //日にち
@@ -75,8 +90,8 @@ document.addEventListener('DOMContentLoaded', function() {
         st_time,  // 出勤時刻
         ed_time,  // 退勤時刻
         work_hours,  // 実労働時間
-        '0:00',  // 残業時間
-        night_work_hours,  // 深夜勤務
+        overworks,  // 残業時間
+        nightworks,  // 深夜勤務
         absence,  // 欠勤 
         holiday,  // 有給
         remarks,  // 備考
@@ -92,7 +107,10 @@ document.addEventListener('DOMContentLoaded', function() {
       lengthChange: false,
       displayLength: 31,
       pagingType: "simple",
-      width: "10px"
+      width: "10px",
+      columnDefs :[
+        {targets:'_all',className : 'dt-body-center'},
+      ],
     })
   })
 })
