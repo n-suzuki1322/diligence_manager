@@ -24,31 +24,11 @@ const mysql_query = (connection, sql, values) => {
 // 日時勤怠
 exports.getDaily = async (req, res) => {
   const userId = req.session.userId;
-  // 社名
-  const daily_sql1 = `select 
-  com.id, com.name
-  from 
-  company com left join (
-  select 
-  gu.dep_id, gu.user_id, dep.comp_id, dep.name 
-  from 
-  group_users gu left join 
-  deployment dep on gu.dep_id=dep.id
-  ) as st on com.id = st.comp_id where st.user_id = ${userId} order by com.id desc limit 1;
-  `;
-  const com_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
-  // 勤怠情報
-  const daily_sql2 = `select * from time_management where user_id = ${userId};`;
-  const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
-  // 名前
-  const daily_sql3 = `select name from users where id = ${userId};`;
-  const name_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql3)))[0];
+  const year = req.params.year | 0;
+  const month = req.params.month | 0;
+  const date = new Date(year, month + 1, 0) ;
+  const lastDay = date.getDate();
 
-  res.render("daily/daily.ejs", {com_info: com_info,time_info: time_info,name_info: name_info});
-}
-
-exports.getDailyEdit = async (req, res) => {
-  const userId = req.session.userId;
   // 社名
   const daily_sql1 = `
   select 
@@ -63,53 +43,143 @@ exports.getDailyEdit = async (req, res) => {
   ) as st on com.id = st.comp_id where st.user_id = ${userId} order by com.id desc limit 1;
   `;
   const com_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
-  // 勤怠情報
-  const daily_sql2 = `select * from time_management where user_id = ${userId};`;
+  // 勤怠情報(月間)
+  const daily_sql2 = `
+  select 
+  st_time, ed_time, absence, holiday, remarks
+  from 
+  time_management 
+  where user_id = ${userId} 
+  and 
+  date between "${year}-${('00'+String(month+1)).slice(-2)}-01" and "${year}-${('00'+String(month+1)).slice(-2)}-${lastDay}";`;
   const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
   // 名前
   const daily_sql3 = `select name from users where id = ${userId};`;
   const name_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql3)))[0];
-  res.render("daily/daily_edit.ejs", {com_info: com_info,time_info: time_info,name_info: name_info});
+  res.render("daily/daily.ejs", {com_info: com_info, time_info: time_info, name_info: name_info, year: year, month: month});
+}
+
+exports.getDailyEdit = async (req, res) => {
+  const userId = req.session.userId;
+  const year = req.params.year | 0;
+  const month = req.params.month | 0;
+  const date = new Date(year, month + 1, 0) ;
+  const lastDay = date.getDate();
+
+  // 社名
+  const daily_sql1 = `
+  select 
+  com.id, com.name
+  from 
+  company com left join (
+  select 
+  gu.dep_id, gu.user_id, dep.comp_id, dep.name 
+  from 
+  group_users gu left join 
+  deployment dep on gu.dep_id=dep.id
+  ) as st on com.id = st.comp_id where st.user_id = ${userId} order by com.id desc limit 1;
+  `;
+  const com_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
+  // 勤怠情報(月間)
+  const daily_sql2 = `
+  select st_time, ed_time, absence, holiday, remarks
+  from 
+  time_management 
+  where user_id = ${userId} 
+  and 
+  date between "${year}-${('00'+String(month+1)).slice(-2)}-01" and "${year}-${('00'+String(month+1)).slice(-2)}-${lastDay}";`;
+  const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
+  // 名前
+  const daily_sql3 = `select name from users where id = ${userId};`;
+  const name_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql3)))[0];
+  res.render("daily/daily_edit.ejs", {com_info: com_info, time_info: time_info, name_info: name_info, year: year, month: month});
 }
 
 exports.getDailyComp = async (req, res) => {
-  res.redirect('/daily');
+  const r = JSON.parse(JSON.stringify(req.body));
+  const userId = req.session.userId;
+  const year = req.params.year;
+  const month = req.params.month;
+  const month_length = r.st_time.length;
+
+  let n = 0;
+  let daily_supdate_sql = "";
+  let daily_eupdate_sql = "";
+  let daily_absence_sql = "";
+  let daily_holiday_sql = "";
+  let daily_remarks_sql = "";
+  while (n != month_length) {
+    if (r.st_time[n] != "") {
+      daily_supdate_sql += `
+      UPDATE time_management 
+      SET st_time = '${year}-${('00'+String(month+1)).slice(-2)}-${n+1} ${r.st_time[n]}:00'
+      WHERE date = date_format('${year}-${('00'+String(month+1)).slice(-2)}-${n+1}', '%Y-%m-%d') 
+      and user_id = ${userId};
+      `;
+    }
+    if (r.ed_time[n] != "") {
+      daily_eupdate_sql += `
+      UPDATE time_management 
+      SET ed_time = '${year}-${('00'+String(month+1)).slice(-2)}-${n+1} ${r.ed_time[n]}:00'
+      WHERE date = date_format('${year}-${('00'+String(month+1)).slice(-2)}-${n+1}', '%Y-%m-%d') 
+      and user_id = ${userId};
+      `;
+    }
+    if (r.absence[n] != "") {
+      daily_absence_sql += `insert into time_management (user_id, date, absence) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", 1);`;
+      console.log(daily_absence_sql);
+    }
+    if (r.holiday[n] != "") {
+      daily_holiday_sql += `insert into time_management (user_id, date, holiday) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", 1);`;
+      console.log(daily_holiday_sql);
+    }
+    if (r.remarks[n] != "") {
+      daily_remarks_sql += `insert into time_management (user_id, date, remarks) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", ${r.remarks[n]});`;
+      console.log(daily_remarks_sql);
+    }
+    n++;
+  }
+  const integrate_sql = daily_supdate_sql + daily_eupdate_sql + daily_absence_sql + daily_holiday_sql + daily_remarks_sql;
+  // const result = await mysql_query(connection, integrate_sql);
+  res.redirect(`/daily/year=${year}/month=${month}`);
 }
 
 exports.excelOutput = async (req, res) => {
   const r = req.body;
-
-  const template_filename = "views/template/record.xlsx";
-  const output_file = "daily.xlsx";
-
-  const year_space = "J3";
-  const year = 2022; // here variable
-  const month_space = "M3";
-  const month = 1; // here variable
-  const dep_space = "J4";
-  const dep = "技術開発部"; // here variable
-  const name_space = "J5";
-  const name = "鈴木頌弘"; // here variable
-  const sttime_space = "B7";
-  const edtime_space = "D7";
-  const rest_space = "E7";
-  const overtime_space = "F7";
-  const midnight_space = "H8";
-  const setting_sttime = 9.5 / 24;// 始業時刻のシリアル値
-  const setting_edtime = 18 / 24;// 終業時刻のシリアル値
-  const setting_rest = 1 / 24;// 休憩時間のシリアル値
-  const setting_overtime = 8 / 24;// 休憩時間のシリアル値
-  const setting_midnight = 22 / 24;// 休憩時間のシリアル値
+  const userId = req.session.userId;
   const serial = 1440;// シリアルの現段階の最大値(24 * 60)
+  const dep_sql = `select dep.name from deployment dep left join group_users gu on dep.id = gu.dep_id where gu.user_id = ${userId};`;
+  
+  const template_filename = "views/template/record.xlsx";
+  // const output_file = "daily.xlsx";
+  
+  const year_space = "J3";
+  const year = req.params.year | 0;
+  const month_space = "M3";
+  const month = req.params.month | 0;
+  const dep_space = "J4";
+  const dep = JSON.parse(JSON.stringify(await mysql_query(connection, dep_sql)))[0].name;
+  const username_space = "J5";
+  const username = req.session.name;
+  const sttime_space = "B7";
+  const setting_sttime = 9.5 / 24;// 始業時刻のシリアル値
+  const edtime_space = "D7";
+  const setting_edtime = 18 / 24;// 終業時刻のシリアル値
+  const rest_space = "E7";
+  const setting_rest = 1 / 24;// 休憩時間のシリアル値
+  const overtime_space = "F7";
+  const setting_overtime = 8 / 24;// 休憩時間のシリアル値
+  const midnight_space = "H8";
+  const setting_midnight = 22 / 24;// 休憩時間のシリアル値
 
   const workbook = new exceljs.Workbook();
   await workbook.xlsx.readFile(template_filename);
 
   const sheet = workbook.worksheets[0];
   sheet.getCell(year_space).value = year;
-  sheet.getCell(month_space).value = month;
+  sheet.getCell(month_space).value = month + 1;
   sheet.getCell(dep_space).value = JSON.stringify(dep).replace(/\"/g, "");
-  sheet.getCell(name_space).value = JSON.stringify(name).replace(/\"/g, "");
+  sheet.getCell(username_space).value = JSON.stringify(username).replace(/\"/g, "");
   sheet.getCell(sttime_space).value = setting_sttime;
   sheet.getCell(edtime_space).value = setting_edtime;
   sheet.getCell(rest_space).value = setting_rest;
@@ -140,7 +210,9 @@ exports.excelOutput = async (req, res) => {
     sheet.getCell(remarks_place).value = r[n].remarks.replace(/ /g, "");
     n++;
   }
+  const output_file = `出勤簿(${year}年${month+1}月).xlsx`;
 
+  // JSON.stringify(workbook, decycle());
   await workbook.xlsx.writeFile(output_file);
   console.log("output完了");
   res.send(workbook);

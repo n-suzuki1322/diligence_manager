@@ -40,7 +40,9 @@ window.onlaod = () => {
 }
 
 const downloadExcel = () => {
-  const url = '/api/excel_output';
+  const year = document.getElementById('year').value;
+  const month = document.getElementById('month').value;
+  const url = `/api/excel_output/year=${year}/month=${month}`;
   const method = 'POST';
   const headers = {
     'Accept': 'application/json',
@@ -69,9 +71,23 @@ const downloadExcel = () => {
     headers: headers,
     body: body
   })
-  .then((res) => {
-    res.json();
+  .then( async (res) => {
     console.log(res);
+    // const url = (window.URL || window.webkitURL).createObjectURL(blob);
+    // const output_file = "daily.xlsx";
+    // const download = document.createElement("a");
+    // download.href = url;
+    // download.download = output_file;
+    // download.click();
+    // (window.URL || window.webkitURL).revokeObjectURL(url);
+    
+
+    // res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // res.setHeader("Content-Disposition", "attachment; filename=" + output_file);
+
+    await workbook.xlsx.write(res);
+
+    res.end();
   }).catch(console.error);
   
 };

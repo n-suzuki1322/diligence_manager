@@ -133,13 +133,7 @@ exports.getWorkflowApplication = async (req, res) => {
     pathway_parr.push(pathway_carr);
   }
 
-  res.render("workflow/apply_main.ejs", {
-    errors: [],
-    pathway: pathway,
-    user: user,
-    leaf_types: leaf_types,
-    route_check: pathway_parr
-  });
+  res.render("workflow/apply_main.ejs", { errors: [], pathway: pathway, user: user, leaf_types: leaf_types, route_check: pathway_parr });
 }
 
 // create workflow
@@ -179,12 +173,8 @@ exports.postCreateWorkflow = async (req, res) => {
     .replace(/Oct/i, 10)
     .replace(/Nov/i, 11)
     .replace(/Dec/i, 12);
-  const st_date = `${st_date_arr[3]}-${("00" + month1).slice(-2)}-${(
-    "00" + st_date_arr[2]
-  ).slice(-2)} 00:00:00`;
-  const ed_date = `${ed_date_arr[3]}-${("00" + month2).slice(-2)}-${(
-    "00" + ed_date_arr[2]
-  ).slice(-2)} 00:00:00`;
+  const st_date = `${st_date_arr[3]}-${("00" + month1).slice(-2)}-${("00" + st_date_arr[2]).slice(-2)} 00:00:00`;
+  const ed_date = `${ed_date_arr[3]}-${("00" + month2).slice(-2)}-${("00" + ed_date_arr[2]).slice(-2)} 00:00:00`;
 
   const remarks = r.remarks;
 
@@ -200,7 +190,7 @@ exports.postCreateWorkflow = async (req, res) => {
 
   // insert to workflow table
   const workflow_insert_statement = `
-insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks) VALUES (?, ?, ?, ?, ?, ?);`;
+  insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks) VALUES (?, ?, ?, ?, ?, ?);`;
   await mysql_query(connection, workflow_insert_statement, [
     userId,
     pathway_id,
@@ -225,7 +215,6 @@ insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks
     insert_intermidiates_query += `insert into intermidiates_workflow (workflow_id, category_id, role_id, user_id) VALUES (${maxid}, ${category_ids[n]}, ${role_ids[n]}, ${user_ids[n]});`;
     n++;
   }
-  console.log(insert_intermidiates_query);
 
   connection.query(insert_intermidiates_query, (err, result) => {
     if (err) {
@@ -243,11 +232,13 @@ insert into workflows (user_id, pathway_id, leaf_type, st_date, ed_date, remarks
 exports.getSendls = async (req, res) => {
   const userId = req.session.userId;
 
-  const workflow_sql = `select 
+  const workflow_sql = `
+  select 
   wf.id, pw.name, wf.is_complete
   from workflows wf 
   left join pathways pw on pw.id = wf.pathway_id 
-  where wf.is_deleted = 0  and wf.user_id = ${userId};`;
+  where wf.is_deleted = 0  and wf.user_id = ${userId};
+  `;
   const send_workflows = await mysql_query(connection, workflow_sql);
   res.render("workflow/sendls.ejs", { errors: [], send_workflows: send_workflows });
 }
@@ -268,7 +259,12 @@ exports.getSendConfirm = async (req, res) => {
   `;
   const workflow = await mysql_query(connection, workflow_query);
 
-  const status_sql = `select category_id, role_id, user_id, is_complete from intermidiates_workflow where workflow_id = ${workflow_id};`;
+  const status_sql = `
+  select 
+  category_id, role_id, user_id, is_complete 
+  from 
+  intermidiates_workflow where workflow_id = ${workflow_id};
+  `;
   const status = await mysql_query(connection, status_sql);
   let status_parr = [];
   let a_l = status.length;
@@ -320,12 +316,14 @@ exports.getReceiptls = async (req, res) => {
   const userId = req.session.userId;
 
   const receipt_workflow_sql = `
-select wf.id, pw.name pathway_name, us.name as user_name, wf.is_complete
-from intermidiates_workflow iw 
-left join workflows wf on iw.workflow_id = wf.id
-left join users us on wf.user_id = us.id
-left join pathways pw on wf.pathway_id = pw.id
-where iw.user_id = ${userId};`;
+  select 
+  wf.id, pw.name pathway_name, us.name as user_name, wf.is_complete
+  from intermidiates_workflow iw 
+  left join workflows wf on iw.workflow_id = wf.id
+  left join users us on wf.user_id = us.id
+  left join pathways pw on wf.pathway_id = pw.id
+  where iw.user_id = ${userId};
+  `;
   const receipt_workflows = await mysql_query(
     connection,
     receipt_workflow_sql
@@ -339,13 +337,14 @@ where iw.user_id = ${userId};`;
 exports.getReceiptConfirm = async (req, res) => {
   const workflow_id = req.params.id | 0;
   const sql = `
-select wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids, wf.is_complete
-from workflows wf
-left join pathways pw on wf.pathway_id = pw.id 
-left join deployment dep on pw.dep_id = dep.id
-left join leaf_types lef on wf.leaf_type = lef.id
-where wf.id = ${workflow_id}
-`;
+  select 
+  wf.id, wf.created_at as apply_date, dep.name as dep_name, pw.name as pathway_name, lef.name as leaf_name, wf.st_date, wf.ed_date, wf.remarks, wf.is_canceled, pw.category_ids, pw.role_ids, pw.user_ids, wf.is_complete
+  from workflows wf
+  left join pathways pw on wf.pathway_id = pw.id 
+  left join deployment dep on pw.dep_id = dep.id
+  left join leaf_types lef on wf.leaf_type = lef.id
+  where wf.id = ${workflow_id}
+  `;
   const workflow = await mysql_query(connection, sql);
 
   const status_sql = `select category_id, role_id, user_id, is_complete from intermidiates_workflow where workflow_id = ${workflow_id};`;

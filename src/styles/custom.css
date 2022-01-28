@@ -39,3 +39,7 @@ hr {
 .rest {
   background: #ffc0cb;
 }
+
+.rest input, .rest select, .rest textarea {
+  background-color: #ffc0cb;
+}

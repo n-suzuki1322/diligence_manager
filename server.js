@@ -123,45 +123,30 @@ app
   const r = req.body;
   const userId = req.session.userId;
 
-  if (r.action === "start") {
-    // 出勤ボタンが押されたらの処理
-    const invalid_sstamp_sql = `select * from time_management where user_id = ${userId} and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_sresult = await mysql_query( connection, invalid_sstamp_sql, userId );
-    if (invalid_sresult[0]) {
-      // 既に出勤打刻してあったらinsertしない
-      console.log(new Date(Date.now()));
-      console.log("もう十分に出勤されています");
+  if (r.action === "start") { // 出勤ボタンが押されたらの処理
+    const invalid_sstamp_sql = `select * from time_management where user_id = ${userId} and date = date_format(now(), '%Y-%m-%d');`;
+    const invalid_sresult = await mysql_query( connection, invalid_sstamp_sql);
+    if (invalid_sresult[0]) { // 既に出勤打刻してあったらinsertしない
       res.redirect("/");
-    } else {
-      // その日の分が打刻されていなかったらinsert
-      const sstamp_sql = `insert into time_management (user_id, st_time) VALUES(${userId}, left(now(), 16));`;
-      const result = await mysql_query(connection, sstamp_sql, userId);
-      console.log("insert result↓");
-      result ? console.log(result) : console.log("internal server error(仮)");
+    } else { // その日の分が打刻されていなかったらinsert
+      const sstamp_sql = `insert into time_management (user_id, date, st_time) VALUES(${userId}, date_format(now(), '%Y-%m-%d'), left(now(), 16));`;
+      await mysql_query(connection, sstamp_sql, userId);
       res.status(200);
       res.redirect("/");
     }
-  } else {
-    // 退勤ボタンが押されたらの処理
-    const invalid_estamp_sql = `select * from time_management where user_id = ? and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_estamp_sql2 = `select * from time_management where user_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-    const invalid_eresult = await mysql_query(connection,invalid_estamp_sql,userId);
-    const invalid_eresult2 = await mysql_query(connection,invalid_estamp_sql2,userId);
-    if (invalid_eresult[0]) {
-      // もう既に退勤してる場合
-      console.log("もう退勤してるってば!");
+  } else { // 退勤ボタンが押されたらの処理
+    const invalid_estamp_sql = `select * from time_management where user_id = ${userId} and date_format(ed_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
+    const invalid_estamp_sql2 = `select * from time_management where user_id = ${userId} and date = date_format(now(), '%Y-%m-%d');`;
+    const invalid_eresult = await mysql_query(connection,invalid_estamp_sql);
+    const invalid_eresult2 = await mysql_query(connection,invalid_estamp_sql2);
+    if (invalid_eresult[0]) { // もう既に退勤してる場合
       res.redirect("/");
-    } else if (invalid_eresult2[0]) {
-      // 出勤打刻されているandまだ退勤がされていなかった場合
-      const estamp_sql = `update time_management set ed_time = left(now(), 16) where user_id = ? and date_format(st_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d');`;
-      const result = await mysql_query(connection, estamp_sql, userId);
-      console.log("update result ↓");
-      result ? console.log(result) : console.log("internal server error");
+    } else if (invalid_eresult2[0]) { // 出勤打刻されているandまだ退勤がされていなかった場合
+      const estamp_sql = `update time_management set ed_time = left(now(), 16) where user_id = ${userId} and date = date_format(now(), '%Y-%m-%d');`;
+      await mysql_query(connection, estamp_sql);
       res.status(200);
       res.redirect("/");
-    } else {
-      // 出勤打刻されていない
-      console.log("まずは出勤してみてほしい");
+    } else { // 出勤打刻されていない
       res.redirect("/");
     }
   }

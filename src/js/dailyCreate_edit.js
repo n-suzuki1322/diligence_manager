@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   jQuery(function($) {
     const time_info = JSON.parse(document.getElementById("time_info").value);
+    const year_param = JSON.parse(document.getElementById("year").value);
+      const month_param = JSON.parse(document.getElementById("month").value);
     $.extend( $.fn.dataTable.defaults, { 
       language: {
         url: "https://cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Japanese.json"
@@ -22,11 +24,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const d = b.getFullYear() + b.getMonth() + b.getDate()
       return c === d ? true : false;
     }
-
     /* today is a day */
-    const today = new Date(Date.now());
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    const search_month = new Date();
+    const year = search_month.getFullYear();
+    const month = search_month.getMonth();
     const dayOfWeekStrJP = [ "日", "月", "火", "水", "木", "金", "土" ];
 
     /** monthly days count */
@@ -36,15 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
     for (let i = 0; i < days; i++) {
       const s = i+1;// 日にち取得
       const d_1 = new Date(year, month, s);
-      const t = dayOfWeekStrJP[d_1.getDay()];// 曜日取得
-      let st_time = '';
-      let ed_time = '';
-      let work_hours = "00:00";
-      let overworks = "00:00";
-      let nightworks = "00:00";
-      let absence = `<select id="absence${i+1}"><option selected></option><option>◯</option></select>`;
-      let holiday = `<select id="holiday${i+1}"><option selected></option><option>◯</option></select>`;
-      let remarks = `<input type="text" value="">`;
+      const t = `<div id="day${d_1.getDay()}">${dayOfWeekStrJP[d_1.getDay()]}</div>`;// 曜日取得
+      let st_time = '<input type="time" name="st_time">';
+      let ed_time = '<input type="time" name="ed_time">';
+      let work_hours = ``;
+      let overworks = ``;
+      let nightworks = ``;
+      let absence = `<select id="absence${i+1}" name="absence"><option selected></option><option>◯</option></select>`;
+      let holiday = `<select id="holiday${i+1}" name="holiday"><option selected></option><option>◯</option></select>`;
+      let remarks = `<input type="text" value="" name="remarks">`;
       time_info.forEach(ele => {
         const from_t = new Date(ele.st_time);
         const to_t = new Date(ele.ed_time);
@@ -53,6 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const h = Math.floor((getSerial(to_t) - getSerial(from_t) - 60) / 60);
           const m = (getSerial(to_t) - getSerial(from_t) - 60) % 60;
           work_hours = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
+          overworks = "00:00";
+          nightworks = "00:00";
           if (getSerial(to_t) > 1320) {
             //nightworks
             const night_h = Math.floor((getSerial(to_t) - 60 * 22) / 60);
@@ -73,15 +76,15 @@ document.addEventListener('DOMContentLoaded', function() {
               overworks = `${('00'+over_h).slice(-2)}:${('00'+over_m).slice(-2)}`;
             }
           }
-          ele.absence !== 1 ? "" : absence = `<select id="absence${i+1}"><option></option><option selected>◯</option></select>`;
-          ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}"><option></option><option selected>◯</option></select>`;
-          remarks = `<input type="text" value=${ele.remarks}>`;
+          ele.absence !== 1 ? "" : absence = `<select id="absence${i+1}" name="absence"><option></option><option selected>◯</option></select>`;
+          ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}" name="holiday"><option></option><option selected>◯</option></select>`;
+          remarks = `<input type="text" name="remarks" value=${ele.remarks ? ele.remarks : ""}>`;
         }
         if (sameDay(d_1, from_t)) {
-          st_time = String(from_t).match(/\d{2}:\d{2}/)[0];
+          st_time = `<input type="time" name="st_time" value=${String(from_t).match(/\d{2}:\d{2}/)[0]}>`;
         }
         if(sameDay(d_1, to_t)) {
-          ed_time = String(to_t).match(/\d{2}:\d{2}/)[0];
+          ed_time = `<input type="time" name="ed_time" value=${String(to_t).match(/\d{2}:\d{2}/)[0]}>`;
         }
       });
       dates.push([
@@ -114,3 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   })
 })
+
+setTimeout(() => {
+  const day0 = document.querySelectorAll('#day0');
+  const day6 = document.querySelectorAll('#day6');
+  day0.forEach(d => {
+    d.parentNode.parentNode.classList.add('rest');
+  });
+  day6.forEach(d => {
+    d.parentNode.parentNode.classList.add('rest');
+  });
+}, 100);

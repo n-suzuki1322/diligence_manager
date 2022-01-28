@@ -13,9 +13,9 @@ const checkSession = (req, res, next) => {
 }
 
 router
-.get('/daily', checkSession, dailyController.getDaily)
-.get('/daily_edit', checkSession, dailyController.getDailyEdit)
-.get('/daily_comp', dailyController.getDailyComp)
-.post('/api/excel_output', dailyController.excelOutput)
+.get('/daily/year=:year/month=:month', checkSession, dailyController.getDaily)
+.get('/daily_edit/year=:year/month=:month', checkSession, dailyController.getDailyEdit)
+.post('/daily_comp/year=:year/month=:month', dailyController.getDailyComp)
+.post('/api/excel_output/year=:year/month=:month', dailyController.excelOutput)
 
 module.exports = router;

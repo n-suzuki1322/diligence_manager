@@ -17,6 +17,8 @@
   </head>
   <body>
     <input type="hidden" id="time_info" value=<%= JSON.stringify(time_info)%>>
+    <input type="hidden" id="year" value=<%= JSON.stringify(year)%>>
+    <input type="hidden" id="month" value=<%= JSON.stringify(month)%>>
     <%- include('../components/_header'); %>
     <div class="flex flex-row space-x-8">
       <table class="leading-normal" id="emp_info">
@@ -49,11 +51,16 @@
           </tr>
         </tbody>
       </table>
+      <%if (time_info.length != 0) {%>
       <button class=" m-3 shadow-lg px-2 py-1 bg-blue-400 text-lg text-white font-semibold rounded hover:bg-blue-500" id="daily_csv_download" type="button" onclick="downloadCSV('daily.csv')" >CSV出力 </button>
       <button class=" m-3 shadow-lg px-2 py-1 bg-green-400 text-lg text-white font-semibold rounded hover:bg-green-500" id="daily_excel_download" type="button" onclick="downloadExcel()">Excel出力</button>
+      <% } %>
       <button class=" m-3 shadow-lg px-2 py-1 bg-red-400 text-lg text-white font-semibold rounded hover:bg-red-500" id="edit_btn" type="button">編集</button>
     </div>
-    <p class="text-center"><a href="#" class="text-blue-300 text-3xl">&lt;</a>　2022年1月勤怠記録　<a href="#" class="text-blue-300 text-3xl">&gt;</a></p>
+    <p class="text-center"><a href="/daily/year=<%= month === 0 ? year -1 : year; %>/month=<%= month === 0 ? 11 : month - 1;%>" class="text-blue-300 text-3xl">&lt;</a>
+      　<%= year%>年<%= month + 1%>月勤怠記録　
+    <a href="/daily/year=<%= month === 11 ? year + 1 : year; %>/month=<%= month === 11 ? 0 : month + 1;%>" class="text-blue-300 text-3xl">&gt;</a></p>
+    <%if (time_info.length != 0) {%>
     <table id="daily-table" width="100%" data-sheet-name="出勤簿">
       <thead>
         <tr>
@@ -74,11 +81,16 @@
         </tr>
       </tbody>
     </table>
+    <% } else {%>
+      <p>データが存在しません。</p>
+    <% } %>
     <script type="text/javascript">
       document.addEventListener('DOMContentLoaded', () => {
         const edit_btn = document.getElementById("edit_btn");
+        const year = document.getElementById("year").value | 0;
+        const month = document.getElementById("month").value | 0;
         edit_btn.addEventListener('click', () => {
-          const url = '/daily_edit';
+          const url = `/daily_edit/year=${year}/month=${month}`;
           location.href = url;
         })
       })

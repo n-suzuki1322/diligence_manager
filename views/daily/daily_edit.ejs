@@ -17,6 +17,8 @@
   </head>
   <body>
     <input type="hidden" id="time_info" value=<%= JSON.stringify(time_info)%>>
+    <input type="hidden" id="year" value=<%= JSON.stringify(year)%>>
+    <input type="hidden" id="month" value=<%= JSON.stringify(month)%>>
     <%- include('../components/_header'); %>
     <div class="flex flex-row space-x-8">
       <table class="leading-normal cell-border" id="emp_info">
@@ -49,38 +51,75 @@
           </tr>
         </tbody>
       </table>
-      <button class=" m-3 shadow-lg px-2 py-1 bg-blue-400 text-lg text-white font-semibold rounded hover:bg-blue-500 " id="daily_csv_download" type="button" onclick="downloadCSV('daily.csv')" >CSV出力 </button>
-      <button class=" m-3 shadow-lg px-2 py-1 bg-green-400 text-lg text-white font-semibold rounded hover:bg-green-500 " id="daily_excel_download" type="button" onclick="downloadExcel()">Excel出力</button>
-      <button class=" m-3 shadow-lg px-2 py-1 bg-violet-600 text-lg text-white font-semibold rounded hover:bg-violet-500 " id="comp_btn" type="button">完了</button>
+      <button class="m-3 shadow-lg px-2 py-1 bg-gray-400 text-lg text-white font-semibold rounded hover:bg-gray-500 " id="daily_csv_download" type="button" onclick="downloadCSV('daily.csv')"disabled >CSV出力 </button>
+      <button class="m-3 shadow-lg px-2 py-1 bg-gray-400 text-lg text-white font-semibold rounded hover:bg-gray-500 " id="daily_excel_download" type="button" onclick="downloadExcel()" disabled>Excel出力</button>
     </div>
-    <table id="daily-table" width="100%" data-sheet-name="出勤簿">
-      <thead>
-        <tr>
-          <th>日</th>
-          <th>曜日</th>
-          <th>始業時刻</th>
-          <th>終業時刻</th>
-          <th>実労働時間</th>
-          <th>残業時間</th>
-          <th>深夜勤務</th>
-          <th>欠勤</th>
-          <th>有給</th>
-          <th>備考</th>
-        </tr>
-      </thead>
-      <tbody id="daily_tbody">
-        <tr>
-        </tr>
-      </tbody>
-    </table>
+    <form action="/daily_comp/year=<%= year%>/month=<%= month%>" method="post">
+      <button class="m-3 shadow-lg px-2 py-1 bg-violet-600 text-lg text-white font-semibold rounded hover:bg-violet-500 " id="comp_btn" type="submit">完了</button>
+      <p class="text-center">　<%= year%>年<%= month + 1%>月勤怠記録　</p>
+      <table id="daily-table" width="100%" data-sheet-name="出勤簿">
+        <thead>
+          <tr>
+            <th>日</th>
+            <th>曜日</th>
+            <th>始業時刻</th>
+            <th>終業時刻</th>
+            <th>実労働時間</th>
+            <th>残業時間</th>
+            <th>深夜勤務</th>
+            <th>欠勤</th>
+            <th>有給</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody id="daily_tbody">
+          <tr>
+          </tr>
+        </tbody>
+      </table>
+    </form>
     <script type="text/javascript">
       document.addEventListener('DOMContentLoaded', () => {
         const comp_btn = document.getElementById("comp_btn");
-        comp_btn.addEventListener('click', () => {
-          const url = '/daily_comp';
-          location.href = url;
-        })
+        const year = document.getElementById("year").value | 0;
+        const month = document.getElementById("month").value | 0;
+        const daily_tbody = document.getElementById('daily_tbody');
       })
+
+      // comp_btn.addEventListener('click', () => {
+      //   const url = `/daily_comp/year=${year}/month=${month}`;
+      //   const method = 'GET';
+      //   const headers = {
+      //     'Accept': 'application/json',
+      //     'Content-Type': 'application/json'
+      //   };
+      //   /**create json */
+      //   let body_arr = [];
+      //   let n = 0;
+      //   const rows = daily_tbody.rows.length;
+      //   while (n != rows) {
+      //     const tr = daily_tbody.rows[n];
+      //     const temp = {
+      //       start: tr.cells[2].childNodes[0].defaultValue,
+      //       end: tr.cells[3].childNodes[0].defaultValue,
+      //       absence: tr.cells[7].childNodes[0].defaultValue,
+      //       holiday: tr.cells[8].childNodes[0].defaultValue,
+      //       remarks: tr.cells[9].childNodes[0].defaultValue
+      //     }
+      //     body_arr.push(temp);
+      //     n++;
+      //   }
+      //   const body = JSON.stringify(body_arr);
+      //   console.log(body);
+      //   fetch(url, { 
+      //     method: method,
+      //     headers: headers,
+      //     body: body
+      //   }).then(async (res) => {
+      //     console.log(res);
+      //     location.href = res.url;
+      //   })
+      // })
     </script>
   </body>
 </html>
