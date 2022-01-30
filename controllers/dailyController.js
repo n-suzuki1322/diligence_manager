@@ -46,7 +46,7 @@ exports.getDaily = async (req, res) => {
   // 勤怠情報(月間)
   const daily_sql2 = `
   select 
-  st_time, ed_time, absence, holiday, remarks
+  date, st_time, ed_time, absence, holiday, remarks
   from 
   time_management 
   where user_id = ${userId} 
@@ -64,6 +64,7 @@ exports.getDailyEdit = async (req, res) => {
   const year = req.params.year | 0;
   const month = req.params.month | 0;
   const date = new Date(year, month + 1, 0) ;
+  const yearAndMonth = `${year}-${('00'+String(month+1)).slice(-2)}`;
   const lastDay = date.getDate();
 
   // 社名
@@ -82,12 +83,12 @@ exports.getDailyEdit = async (req, res) => {
   const com_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql1)))[0];
   // 勤怠情報(月間)
   const daily_sql2 = `
-  select st_time, ed_time, absence, holiday, remarks
+  select date, st_time, ed_time, absence, holiday, remarks
   from 
   time_management 
   where user_id = ${userId} 
   and 
-  date between "${year}-${('00'+String(month+1)).slice(-2)}-01" and "${year}-${('00'+String(month+1)).slice(-2)}-${lastDay}";`;
+  date between "${yearAndMonth}-01" and "${yearAndMonth}-${lastDay}";`;
   const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
   // 名前
   const daily_sql3 = `select name from users where id = ${userId};`;
@@ -98,49 +99,120 @@ exports.getDailyEdit = async (req, res) => {
 exports.getDailyComp = async (req, res) => {
   const r = JSON.parse(JSON.stringify(req.body));
   const userId = req.session.userId;
-  const year = req.params.year;
-  const month = req.params.month;
+  const year = req.params.year | 0;
+  const month = req.params.month | 0;
   const month_length = r.st_time.length;
 
   let n = 0;
-  let daily_supdate_sql = "";
-  let daily_eupdate_sql = "";
-  let daily_absence_sql = "";
-  let daily_holiday_sql = "";
-  let daily_remarks_sql = "";
+  let integrated_sql = "";
+
+
   while (n != month_length) {
-    if (r.st_time[n] != "") {
-      daily_supdate_sql += `
-      UPDATE time_management 
-      SET st_time = '${year}-${('00'+String(month+1)).slice(-2)}-${n+1} ${r.st_time[n]}:00'
-      WHERE date = date_format('${year}-${('00'+String(month+1)).slice(-2)}-${n+1}', '%Y-%m-%d') 
-      and user_id = ${userId};
-      `;
-    }
-    if (r.ed_time[n] != "") {
-      daily_eupdate_sql += `
-      UPDATE time_management 
-      SET ed_time = '${year}-${('00'+String(month+1)).slice(-2)}-${n+1} ${r.ed_time[n]}:00'
-      WHERE date = date_format('${year}-${('00'+String(month+1)).slice(-2)}-${n+1}', '%Y-%m-%d') 
-      and user_id = ${userId};
-      `;
-    }
-    if (r.absence[n] != "") {
-      daily_absence_sql += `insert into time_management (user_id, date, absence) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", 1);`;
-      console.log(daily_absence_sql);
-    }
-    if (r.holiday[n] != "") {
-      daily_holiday_sql += `insert into time_management (user_id, date, holiday) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", 1);`;
-      console.log(daily_holiday_sql);
-    }
-    if (r.remarks[n] != "") {
-      daily_remarks_sql += `insert into time_management (user_id, date, remarks) values(${userId}, "${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}", ${r.remarks[n]});`;
-      console.log(daily_remarks_sql);
+    const date = `${year}-${('00'+String(month+1)).slice(-2)}-${('00'+String(n+1)).slice(-2)}`;
+    let st_time_val = null;
+    let ed_time_val = null;
+    let absence_val = 0;
+    let holiday_val = 0;
+    let remarks_val = null;
+    const check_sql  = `select * from time_management where date = '${date}' and user_id = ${userId};`;
+    const result = JSON.parse(JSON.stringify(await mysql_query(connection, check_sql)));
+    if (result.length === 0) {
+      if (r.st_time[n] != "") {
+        st_time_val = `'${date} ${r.st_time[n]}:00'`;
+      }
+      if (r.ed_time[n] != "") {
+        ed_time_val = `'${date} ${r.ed_time[n]}:00'`;
+      }
+      if (r.absence[n] != "") {
+        absence_val = 1;
+      }
+      if (r.holiday[n] != "") {
+          holiday_val = 1;
+      }
+      if (r.remarks[n] != "") {
+          remarks_val = r.remarks[n];
+      }
+      if (r.st_time[n] != "" || r.ed_time[n] != "" || r.absence[n] != "" || r.holiday[n] != "" || r.remarks[n] != "") {
+        if (r.remarks[n] != "") {
+          integrated_sql  += `
+          insert 
+          into 
+          time_management (
+            user_id, 
+            date,
+            st_time, 
+            ed_time, 
+            absence, 
+            holiday, 
+            remarks
+          ) values (${userId}, '${date}', ${st_time_val}, ${ed_time_val}, ${absence_val}, ${holiday_val}, '${remarks_val}');
+          `;
+        } else {
+          integrated_sql  += `
+          insert 
+          into 
+          time_management (
+            user_id, 
+            date,
+            st_time, 
+            ed_time, 
+            absence, 
+            holiday, 
+            remarks
+          ) values (${userId}, '${date}', ${st_time_val}, ${ed_time_val}, ${absence_val}, ${holiday_val}, null);
+          `;
+        }
+      }
+    } else {
+      if (r.st_time[n] != "") {
+        st_time_val = `'${date} ${r.st_time[n]}:00'`;
+      }
+      if (r.ed_time[n] != "") {
+        ed_time_val = `'${date} ${r.ed_time[n]}:00'`;
+      }
+      if (r.absence[n] != "") {
+        absence_val = 1;
+      }
+      if (r.holiday[n] != "") {
+          holiday_val = 1;
+      }
+      if (r.remarks[n] != "") {
+          remarks_val = r.remarks[n];
+      }
+      if (r.remarks[n] != "") {
+        integrated_sql  += `
+        update time_management 
+        set 
+        st_time = ${st_time_val},
+        ed_time = ${ed_time_val}, 
+        absence = ${absence_val}, 
+        holiday = ${holiday_val}, 
+        remarks = '${remarks_val}'
+        where 
+        date = '${date}'
+        and 
+        user_id = ${userId};
+        `;
+      } else {
+        integrated_sql  += `
+        update time_management 
+        set 
+        st_time = ${st_time_val},
+        ed_time = ${ed_time_val}, 
+        absence = ${absence_val}, 
+        holiday = ${holiday_val}, 
+        remarks = null
+        where 
+        date = '${date}'
+        and 
+        user_id = ${userId};
+        `;
+      }
     }
     n++;
   }
-  const integrate_sql = daily_supdate_sql + daily_eupdate_sql + daily_absence_sql + daily_holiday_sql + daily_remarks_sql;
-  // const result = await mysql_query(connection, integrate_sql);
+
+  integrated_sql != "" ? await mysql_query(connection, integrated_sql) : "";
   res.redirect(`/daily/year=${year}/month=${month}`);
 }
 

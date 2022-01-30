@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   jQuery(function($) {
     const time_info = JSON.parse(document.getElementById("time_info").value);
     const year_param = JSON.parse(document.getElementById("year").value);
-      const month_param = JSON.parse(document.getElementById("month").value);
+    const month_param = JSON.parse(document.getElementById("month").value);
     $.extend( $.fn.dataTable.defaults, { 
       language: {
         url: "https://cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Japanese.json"
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return c === d ? true : false;
     }
     /* today is a day */
-    const search_month = new Date();
+    const search_month = new Date(year_param, month_param);
     const year = search_month.getFullYear();
     const month = search_month.getMonth();
     const dayOfWeekStrJP = [ "日", "月", "火", "水", "木", "金", "土" ];
@@ -46,7 +46,9 @@ document.addEventListener('DOMContentLoaded', function() {
       let absence = `<select id="absence${i+1}" name="absence"><option selected></option><option>◯</option></select>`;
       let holiday = `<select id="holiday${i+1}" name="holiday"><option selected></option><option>◯</option></select>`;
       let remarks = `<input type="text" value="" name="remarks">`;
+
       time_info.forEach(ele => {
+        const target_date = new Date(ele.date);
         const from_t = new Date(ele.st_time);
         const to_t = new Date(ele.ed_time);
         if (sameDay(d_1, from_t) && sameDay(d_1, to_t)) {
@@ -80,11 +82,12 @@ document.addEventListener('DOMContentLoaded', function() {
           ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}" name="holiday"><option></option><option selected>◯</option></select>`;
           remarks = `<input type="text" name="remarks" value=${ele.remarks ? ele.remarks : ""}>`;
         }
-        if (sameDay(d_1, from_t)) {
-          st_time = `<input type="time" name="st_time" value=${String(from_t).match(/\d{2}:\d{2}/)[0]}>`;
-        }
-        if(sameDay(d_1, to_t)) {
-          ed_time = `<input type="time" name="ed_time" value=${String(to_t).match(/\d{2}:\d{2}/)[0]}>`;
+        if (sameDay(d_1, target_date)) {
+          from_t.getFullYear() != 1970 ? st_time = `<input type="time" name="st_time" value=${String(from_t).match(/\d{2}:\d{2}/)[0]}>` : "";
+          to_t.getFullYear() != 1970 ? ed_time = `<input type="time" name="ed_time" value=${String(to_t).match(/\d{2}:\d{2}/)[0]}>` : "";
+          ele.absence !== 1 ? "" : absence = `<select id="absence${i+1}" name="absence"><option></option><option selected>◯</option></select>`;
+          ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}" name="holiday"><option></option><option selected>◯</option></select>`;
+          remarks = `<input type="text" name="remarks" value=${ele.remarks ? ele.remarks : ""}>`;
         }
       });
       dates.push([
@@ -127,4 +130,4 @@ setTimeout(() => {
   day6.forEach(d => {
     d.parentNode.parentNode.classList.add('rest');
   });
-}, 100);
+}, 105);

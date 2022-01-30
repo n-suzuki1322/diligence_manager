@@ -49,7 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let absence = "";
         let holiday = "";
         let remarks = "";
+
         time_info.forEach(ele => {
+          const target_date = new Date(ele.date);
           const from_t = new Date(ele.st_time);
           const to_t = new Date(ele.ed_time);
           if (sameDay(d_1, from_t) && sameDay(d_1, to_t)) {
@@ -77,15 +79,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 overworks = `${('00'+over_h).slice(-2)}:${('00'+over_m).slice(-2)}`;
               }
             }
+          }
+          if (sameDay(d_1, target_date)) {
+            from_t.getFullYear() != 1970 ? st_time = String(from_t).match(/\d{2}:\d{2}/)[0] : st_time = null;
+            to_t.getFullYear() != 1970 ? ed_time = String(to_t).match(/\d{2}:\d{2}/)[0]: ed_time = null;
             ele.absence !== 1 ? "" : absence = "◯";
             ele.holiday !== 1 ? "" : holiday = "○";
             remarks = ele.remarks;
-          }
-          if (sameDay(d_1, from_t)) {
-            st_time = String(from_t).match(/\d{2}:\d{2}/)[0];
-          }
-          if(sameDay(d_1, to_t)) {
-            ed_time = String(to_t).match(/\d{2}:\d{2}/)[0];
           }
         });
         dates.push([
@@ -114,14 +114,14 @@ document.addEventListener('DOMContentLoaded', function() {
       })
     })
     setTimeout(() => {
-      const day0 = document.querySelectorAll('#day0');
-      const day6 = document.querySelectorAll('#day6');
-      day0.forEach(d => {
-        d.parentNode.parentNode.classList.add('rest');
-      });
-      day6.forEach(d => {
-        d.parentNode.parentNode.classList.add('rest');
-      });
+        const day0 = document.querySelectorAll('#day0');
+        const day6 = document.querySelectorAll('#day6');
+        day0.forEach(d => {
+          d.parentNode.parentNode.classList.add('rest');
+        });
+        day6.forEach(d => {
+          d.parentNode.parentNode.classList.add('rest');
+        });
     }, 100);
   } 
 })

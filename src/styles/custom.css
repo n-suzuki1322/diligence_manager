@@ -29,7 +29,11 @@ hr {
 }
 
 *:not(svg)[aria-hidden="true"]{
-  display: none;	
+  display: none;
+}
+
+input, select {
+  background-color: #ffffff;
 }
 
 .gradient {
