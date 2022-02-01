@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /opt/n_suzuki-sample/
+    destination: /opt/diligence_manager/
 hooks:
   BeforeInstall:
     - location: scripts/start_server
