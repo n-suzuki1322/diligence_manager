@@ -2,7 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const bcrypt = require("bcrypt");
 const app = express();
-const port = process.env.PORT || 4649;
+const port = 4649;
 const dotenv = require("dotenv");
 dotenv.config();
 
