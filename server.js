@@ -228,4 +228,6 @@ const daily = require("./routes/daily");
 app.use("/", daily);
 
 const workflow = require("./routes/workflow");
+
 app.use("/", workflow);
+connection.end();
