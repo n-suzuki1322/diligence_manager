@@ -19,7 +19,7 @@
         send_workflows.forEach(workflow => {
           let status_text;
           workflow.is_complete ===1 ? status_text = "完了" : status_text = "まだ";
-          $('#send_ls').append(`<li><a href="/send_confirm/${workflow.id}">id: ${workflow.id} 申請フォーム名: ${workflow.name} KPI: ${status_text}</a></li>`)
+          $('#send_ls').append(`<li><a href="/send_confirm/${workflow.id}">ワークフローid: ${workflow.id} 申請フォーム名: ${workflow.name} KPI: ${status_text}</a></li>`)
         });
       })
     </script>
