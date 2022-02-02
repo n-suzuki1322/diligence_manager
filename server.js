@@ -89,7 +89,7 @@ app
   console.log(`signin email = ${email}`);
   console.log(`signin password = ${password}`);
 
-  const query = `select * from users where email = ${email};`;
+  const query = `select * from users where email = '${email}';`;
   connection.query(
     query,
     (error, result) => {
@@ -229,6 +229,4 @@ const daily = require("./routes/daily");
 app.use("/", daily);
 
 const workflow = require("./routes/workflow");
-
 app.use("/", workflow);
-connection.end();
