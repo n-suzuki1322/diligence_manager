@@ -2,7 +2,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      node.js: 17.4.0
+      nodejs: 17.4.0
     commands:
       - echo installing
   pre_build:
