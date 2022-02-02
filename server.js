@@ -88,9 +88,10 @@ app
   const password = r.password;
   console.log(`signin email = ${email}`);
   console.log(`signin password = ${password}`);
+  
+  const query = `select * from users where email = ${email};`;
   connection.query(
-    "SELECT * FROM users WHERE email = ?;",
-    [email],
+    query,
     (error, result) => {
       if (error) {
         console.log("maybe send wrong password or email");
