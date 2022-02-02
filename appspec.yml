@@ -2,13 +2,14 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /opt/diligence_manager/
+    destination: /opt/diligence_manager
+    overwrite: true
 hooks:
   BeforeInstall:
-    - location: scripts/start_server
+    - location: scripts/BeforeInstall.sh
       timeout: 300
       runas: root
   ApplicationStop:
-    - location: scripts/stop_server
+    - location: scripts/ApplicationStop.sh
       timeout: 300
       runas: root

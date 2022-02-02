@@ -50,7 +50,7 @@ console.log("password " + process.env.PASSWORD);
 console.log("database " + process.env.DATABASE);
 
 // check the connection
-connection.connect((err) => {
+connection.connect(err => {
   err
     ? console.log("error connecting → " + err.stack)
     : console.log("mysql connecting");

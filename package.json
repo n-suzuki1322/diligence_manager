@@ -1,0 +1,40 @@
+{
+  "name": "diligence_manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "browserslist": [
+    "last 2 version",
+    "> 5%",
+    "ie >= 11"
+  ],
+  "scripts": {
+    "build:css": "NODE_ENV=production postcss src/styles/tailwind.css -o src/styles/styles.css",
+    "start": "scripts start",
+    "build": "scripts build"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "date-fns": "^2.28.0",
+    "dotenv": "^10.0.0",
+    "ejs": "^3.1.6",
+    "exceljs": "^4.3.0",
+    "express": "^4.17.2",
+    "express-session": "^1.17.2",
+    "file-saver": "^2.0.5",
+    "json-decycle": "^1.0.0",
+    "mysql": "^2.18.1",
+    "xlsx-populate": "^1.21.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.2",
+    "postcss": "^8.4.5",
+    "postcss-cli": "^9.1.0",
+    "postcss-import": "^14.0.2",
+    "tailwindcss": "^3.0.12",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  }
+}
