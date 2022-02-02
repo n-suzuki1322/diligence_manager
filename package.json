@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build:css": "NODE_ENV=production postcss src/styles/tailwind.css -o src/styles/styles.css",
-    "start": "scripts start",
+    "start": "node server.js",
     "build": "scripts build"
   },
   "author": "",
