@@ -88,32 +88,32 @@ app
   const password = r.password;
   console.log(`signin email = ${email}`);
   console.log(`signin password = ${password}`);
-  
+
   const query = `select * from users where email = ${email};`;
   connection.query(
     query,
     (error, result) => {
       if (error) {
+        console.log('problem happened!');
+        res.redirect("/signin");
+      } else if (result.length == 0 ) {
         console.log("maybe send wrong password or email");
         res.redirect("/signin");
-      }
-      if (result.length > 0) {
+      } else {
         const hash = result[0].password;
         bcrypt.compare(password, hash, (error, isEqual) => {
-          if (isEqual) {
+          if (!isEqual) {
+            console.log(`error is ${error}`);
+            res.redirect("/signin");
+          } else {
             req.session.userId = result[0].id;
             req.session.name = result[0].name;
             req.session.email = result[0].email;
             console.log(`session userId = ${req.session.userId}`);
             console.log(`session username = ${req.session.name}`);
             res.redirect("/");
-          } else {
-            console.log(`error is ${error}`);
-            res.redirect("/signin");
-          }
+          } 
         });
-      } else {
-        res.redirect("/signin");
       }
     }
   );
