@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
           remarks = `<input type="text" name="remarks" value=${ele.remarks ? ele.remarks : ""}>`;
         }
         if (sameDay(d_1, target_date)) {
-          from_t.getFullYear() != 1970 ? st_time = `<input type="time" name="st_time" value=${String(from_t).match(/\d{2}:\d{2}/)[0]}>` : "";
-          to_t.getFullYear() != 1970 ? ed_time = `<input type="time" name="ed_time" value=${String(to_t).match(/\d{2}:\d{2}/)[0]}>` : "";
+          from_t.getFullYear() != 1970 ? st_time = `<input type="time" name="st_time" value=${String(ele.st_time).match(/\d{2}:\d{2}/)[0]}>` : "";
+          to_t.getFullYear() != 1970 ? ed_time = `<input type="time" name="ed_time" value=${String(ele.ed_time).match(/\d{2}:\d{2}/)[0]}>` : "";
           ele.absence !== 1 ? "" : absence = `<select id="absence${i+1}" name="absence"><option></option><option selected>◯</option></select>`;
           ele.holiday !== 1 ? "" : holiday = `<select id="holiday${i+1}" name="holiday"><option></option><option selected>◯</option></select>`;
           remarks = `<input type="text" name="remarks" value=${ele.remarks ? ele.remarks : ""}>`;

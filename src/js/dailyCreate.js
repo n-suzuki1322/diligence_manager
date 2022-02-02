@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
           if (sameDay(d_1, target_date)) {
-            from_t.getFullYear() != 1970 ? st_time = String(from_t).match(/\d{2}:\d{2}/)[0] : st_time = null;
-            to_t.getFullYear() != 1970 ? ed_time = String(to_t).match(/\d{2}:\d{2}/)[0]: ed_time = null;
+            from_t.getFullYear() != 1970 ? st_time = String(ele.st_time).match(/\d{2}:\d{2}/)[0] : st_time = null;
+            to_t.getFullYear() != 1970 ? ed_time = String(ele.ed_time).match(/\d{2}:\d{2}/)[0]: ed_time = null;
             ele.absence !== 1 ? "" : absence = "◯";
             ele.holiday !== 1 ? "" : holiday = "○";
             remarks = ele.remarks;
