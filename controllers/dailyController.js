@@ -53,7 +53,6 @@ exports.getDaily = async (req, res) => {
   and 
   date between "${year}-${('00'+String(month+1)).slice(-2)}-01" and "${year}-${('00'+String(month+1)).slice(-2)}-${lastDay}";`;
   const time_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql2)));
-  console.log(time_info);
   // 名前
   const daily_sql3 = `select name from users where id = ${userId};`;
   const name_info = JSON.parse(JSON.stringify(await mysql_query(connection, daily_sql3)))[0];

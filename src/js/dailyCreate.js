@@ -52,9 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         time_info.forEach(ele => {
           const target_date = new Date(ele.date);
-          console.log(ele.st_time);
           const from_t = new Date(ele.st_time);
-          console.log(from_t);
           const to_t = new Date(ele.ed_time);
           if (sameDay(d_1, from_t) && sameDay(d_1, to_t)) {
             // work hours
