@@ -41,8 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const s = i+1;// 日にち取得
         const d_1 = new Date(year, month, s);
         const t = `<div id="day${d_1.getDay()}">${dayOfWeekStrJP[d_1.getDay()]}</div>`;// 曜日取得
-        let st_time = '';
-        let ed_time = '';
+        let st_time;
+        let ed_time;
         let work_hours = "00:00";
         let overworks = "00:00";
         let nightworks = "00:00";
@@ -52,7 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         time_info.forEach(ele => {
           const target_date = new Date(ele.date);
+          console.log(ele.st_time);
           const from_t = new Date(ele.st_time);
+          console.log(from_t);
           const to_t = new Date(ele.ed_time);
           if (sameDay(d_1, from_t) && sameDay(d_1, to_t)) {
             // work hours
