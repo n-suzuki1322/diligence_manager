@@ -1,4 +1,5 @@
 #!/bin/bash 
-set -e
-yum update -y
-pm2 update
+isExistApp=$(pgrep nginx)
+if [[ -n $isExistApp ]]; then
+    systemctl stop nginx
+fi
