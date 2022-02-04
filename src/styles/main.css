@@ -334,4 +334,28 @@ body {
 .inactive-item {
   opacity: 0;
 }
+
+.daily-table-container {
+  margin: 10px auto 0;
+  width: 768px;
+  background-color: #fffdfd;
+}
+
+.daily-table-container thead {
+  line-height: 30px;
+  border: 1px solid black;
+}
+
+.daily-table-container thead th:not(:last-child) {
+  border-right: 1px solid black;
+}
+
+.daily-table-container tbody tr {
+  border-bottom: 1px solid black;
+  border-left: 1px solid black;
+}
+
+.daily-table-container tbody tr td {
+  border-right: 1px solid black;
+}
 /*# sourceMappingURL=main.css.map */
