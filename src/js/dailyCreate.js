@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lengthChange: false,
         displayLength: days,
         paging: false,
-        width: "10px",
+        // width: "10px",
       })
     })
     setTimeout(() => {

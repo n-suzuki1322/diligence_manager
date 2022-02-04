@@ -338,24 +338,37 @@ body {
 .daily-table-container {
   margin: 10px auto 0;
   width: 768px;
-  background-color: #fffdfd;
 }
 
-.daily-table-container thead {
-  line-height: 30px;
+.daily-table-container table {
   border: 1px solid black;
 }
 
-.daily-table-container thead th:not(:last-child) {
+.daily-table-container table thead {
+  line-height: 30px;
+  border-bottom: 1px solid black;
+}
+
+.daily-table-container table thead th {
+  text-align: center;
+}
+
+.daily-table-container table thead th:not(:last-child) {
   border-right: 1px solid black;
 }
 
-.daily-table-container tbody tr {
+.daily-table-container table tbody {
   border-bottom: 1px solid black;
   border-left: 1px solid black;
+  border-right: 1px solid black;
 }
 
-.daily-table-container tbody tr td {
+.daily-table-container table tbody tr:not(:last-child) {
+  border-bottom: 1px solid black;
+}
+
+.daily-table-container table tbody tr:not(:last-child) td {
   border-right: 1px solid black;
+  text-align: center;
 }
 /*# sourceMappingURL=main.css.map */
