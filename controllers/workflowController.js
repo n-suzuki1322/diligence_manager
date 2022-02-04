@@ -53,6 +53,10 @@ exports.getCreatePathway = async (req, res) => {
 exports.postCreatePathway = async (req, res) => {
   const r = req.body;
   console.log(`req body is ${JSON.stringify(r)}`);
+  if (r.category == 0 || r.role == 0 || r.processor == 0) {
+    res.redirect(`/workflow/create_pathway`);
+    return;
+  }
   const workflow_name = r.workflow_name;
   const deployment = r.deployment | 0;
   const categories = r.category.join(",");

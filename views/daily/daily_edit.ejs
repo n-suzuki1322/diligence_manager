@@ -85,41 +85,6 @@
         const month = document.getElementById("month").value | 0;
         const daily_tbody = document.getElementById('daily_tbody');
       })
-
-      // comp_btn.addEventListener('click', () => {
-      //   const url = `/daily_comp/year=${year}/month=${month}`;
-      //   const method = 'GET';
-      //   const headers = {
-      //     'Accept': 'application/json',
-      //     'Content-Type': 'application/json'
-      //   };
-      //   /**create json */
-      //   let body_arr = [];
-      //   let n = 0;
-      //   const rows = daily_tbody.rows.length;
-      //   while (n != rows) {
-      //     const tr = daily_tbody.rows[n];
-      //     const temp = {
-      //       start: tr.cells[2].childNodes[0].defaultValue,
-      //       end: tr.cells[3].childNodes[0].defaultValue,
-      //       absence: tr.cells[7].childNodes[0].defaultValue,
-      //       holiday: tr.cells[8].childNodes[0].defaultValue,
-      //       remarks: tr.cells[9].childNodes[0].defaultValue
-      //     }
-      //     body_arr.push(temp);
-      //     n++;
-      //   }
-      //   const body = JSON.stringify(body_arr);
-      //   console.log(body);
-      //   fetch(url, { 
-      //     method: method,
-      //     headers: headers,
-      //     body: body
-      //   }).then(async (res) => {
-      //     console.log(res);
-      //     location.href = res.url;
-      //   })
-      // })
     </script>
   </body>
 </html>
