@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>申請フォームを作成するためのページ</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/custom.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+  <body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;" cz-shortcut-listen="true">
+    <input type="hidden" id="pathways" value=<%= JSON.stringify(pathways)%>>
+    <%- include('../components/_header')  %>
+    <a href="http://localhost:4649/workflow">戻る</a>
+    <div class="flex flex-col">
+      <div id="title" class="flex">申請フォーム設定</div>
+      <div class="flex">
+        <ul id="workflow-ls" class=" bg-black flex-1">作成済み申請フォーム一覧</ul>
+        <div id="workflow-cr" class="flex-1">
+          <button type="button" onclick="location.href='/workflow/create_pathway'" class="mx-auto lg:mx-0 w-full hover:underline gradient my-2 py-2 px-8 rounded-full text-5xl font-bold leading-tight text-center text-white shadow-lg">作成する</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const pathways = JSON.parse(document.getElementById('pathways').value);
+        
+        pathways.forEach(pathway => {
+          $('#workflow-ls').append(`<li value=${pathway.pid} class="text-blue-900">${pathway.pw_name}<br>部署は  ${pathway.dp_name}</li>`)
+        });
+      })
+    </script>
+  </body>
+</html>

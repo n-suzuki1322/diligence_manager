@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/styles.css" />
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href="/styles/main.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.2/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+    <script src="/js/dailyCreate.js"></script>
+    <script lang="javascript" type="text/javascript" src="/js/output.js"></script>
+    <title>daily page</title>
+  </head>
+  <body>
+    <input type="hidden" id="time_info" value=<%= JSON.stringify(time_info)%>>
+    <input type="hidden" id="year" value=<%= JSON.stringify(year)%>>
+    <input type="hidden" id="month" value=<%= JSON.stringify(month)%>>
+    <%- include('../components/_header'); %>
+    <div class="flex flex-row space-x-8">
+      <table class="leading-normal" id="emp_info">
+        <thead>
+          <tr>
+            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 tracking-wider">社名</th>
+            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 tracking-wider">氏名</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center"><%= com_info.name%></td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center"><%= name_info.name%></td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="leading-normal" id="setting_time" data-sheet-name="出勤簿">
+        <thead>
+          <tr>
+            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 tracking-wider">始業時刻</th>
+            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 tracking-wider">終業時刻</th>
+            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 tracking-wider">休憩時間</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">09:30</td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">18:00</td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">1:00</td>
+          </tr>
+        </tbody>
+      </table>
+      <%if (time_info.length != 0) {%>
+        <button class=" m-3 shadow-lg px-2 py-1 bg-blue-400 text-lg text-white font-semibold rounded hover:bg-blue-500" id="daily_csv_download" type="button" onclick="downloadCSV('daily.csv')" >CSV出力 </button>
+        <button class=" m-3 shadow-lg px-2 py-1 bg-green-400 text-lg text-white font-semibold rounded hover:bg-green-500" id="daily_excel_download" type="button" onclick="downloadExcel()">Excel出力</button>
+      <% } else { %>
+        <button class=" m-3 shadow-lg px-2 py-1 bg-gray-400 text-lg text-white font-semibold rounded" id="daily_csv_download" type="button" onclick="downloadCSV('daily.csv')" >CSV出力 </button>
+        <button class=" m-3 shadow-lg px-2 py-1 bg-gray-400 text-lg text-white font-semibold rounded" id="daily_excel_download" type="button" onclick="downloadExcel()">Excel出力</button>
+      <% } %>
+      <button class=" m-3 shadow-lg px-2 py-1 bg-red-400 text-lg text-white font-semibold rounded hover:bg-red-500" id="edit_btn" type="button">編集</button>
+    </div>
+    <p class="text-center"><a href="/daily/year=<%= month === 0 ? year -1 : year; %>/month=<%= month === 0 ? 11 : month - 1;%>" class="text-blue-300 text-3xl">&lt;</a>
+      　<%= year%>年<%= month + 1%>月勤怠記録　
+    <a href="/daily/year=<%= month === 11 ? year + 1 : year; %>/month=<%= month === 11 ? 0 : month + 1;%>" class="text-blue-300 text-3xl">&gt;</a></p>
+    <%if (time_info.length != 0) {%>
+    <div class="daily-table-container">
+      <table id="daily-table" width="100%" data-sheet-name="出勤簿">
+        <thead>
+          <tr>
+            <th align="right">日</th>
+            <th>曜日</th>
+            <th>始業時刻</th>
+            <th>終業時刻</th>
+            <th>実労働時間</th>
+            <th>残業時間</th>
+            <th>深夜勤務</th>
+            <th>欠勤</th>
+            <th>有給</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody id="daily_tbody">
+          <tr>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <% } else {%>
+      <p>データが存在しません。</p>
+    <% } %>
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', () => {
+        const edit_btn = document.getElementById("edit_btn");
+        const year = document.getElementById("year").value | 0;
+        const month = document.getElementById("month").value | 0;
+        edit_btn.addEventListener('click', () => {
+          const url = `/daily_edit/year=${year}/month=${month}`;
+          location.href = url;
+        })
+      })
+    </script>
+  </body>
+</html>
