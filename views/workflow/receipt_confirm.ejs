@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>申請データの詳細</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/custom.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+  <body class="leading-normal tracking-normal text-white gradient" style="font-family: 'Source Sans Pro', sans-serif;" cz-shortcut-listen="true">
+    <input type="hidden" id="workflow" value=<%= JSON.stringify(workflow) %> />
+    <input type="hidden" id="status" value=<%= JSON.stringify(status) %> />
+    <%- include('../components/_header')  %>
+    <button onclick="history.back()">戻る</button>
+    <h1>id: <%= workflow[0].id %> <%= workflow[0].pathway_name%></h1>
+
+
+    <table class="text-black">
+      <tbody>
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">申請者</th>
+          <td>
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">申請日</th>
+          <td>
+            <input type="text" name="apply_date" id="apply_date" class="text-slate-900 text-xl" readonly="readonly" />
+          </td>
+        </tr>
+        
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">部署</th>
+          <td nowrap="">
+            <input type="text" name="deployment" id="deployment" class="text-slate-900 text-xl" value=<%= workflow[0].dep_name%> readonly="readonly" />
+          </td>
+        </tr>
+        
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">補足</th>
+          <td nowrap="" id="supplement">
+            <textarea name="supplement" class="text-red-700 " cols="90" rows="16" title="【補足（※入力不要）】" wrap="virtual" readonly="readonly">
+※　届出に関する留意点（必ずお読みください。本欄は入力不要・変更不可）※
+
+その1: 月をまたがって休暇を取得する場合は、月毎に申請を分けてください
+　　　　例）8/31,9/3,9/4の3日間の休暇届
+　　　　　　→8/31の1日分と、9/3〜9/4の2日分の計2回申請。
+
+その2: 休暇の種類ごとに申請を分けてください。
+　　　　例）8/12～8/16まで夏季休暇と年次有給休暇を組み合わせて取得する場合
+　　　　　　8/12～8/14分を夏季休暇として3日分と、
+　　　　　　8/15～8/16を年次有給休暇として1日分の計2回申請。
+
+その3: 出勤簿の休暇取得した日の有給欄に〇を入れて、備考欄に事由を記載してください。
+　　　　※　私用の為、体調不良の為、記念日休暇取得の為　など
+
+　　
+その留意点
+※１．半日のみ休む場合も有給1日分の申請となります。
+
+※２．振替休日の申請は今までと変わりませんのでご注意ください。</textarea>
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">休暇種類</th>
+          <td nowrap="">
+            <input type="text" name="leaf_type" id="leaf_type" class="text-slate-900 text-xl" value=<%= workflow[0].leaf_name%> readonly="readonly" />
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">取得開始日</th>
+          <td nowrap="">
+            <input type="text" name="st_date" id="st_date" class="text-slate-900 text-xl" readonly="readonly" />
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">終了日</th>
+          <td nowrap="">
+            <input type="text" name="ed_date" id="ed_date" class="text-slate-900 text-xl" value=<%= new Date(workflow[0].ed_date) %> readonly="readonly" />
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">休暇日数</th>
+          <td nowrap="">
+            <input type="text" name="duration" id="duration" class="text-slate-900 text-xl" value=<%= (new Date(workflow[0].ed_date) - new Date(workflow[0].st_date)) /86400000 + 1%> readonly="readonly" />
+          </td>
+        </tr>
+
+        <tr valign="top">
+          <th rowspan="1" align="left" nowrap="">理由・備考(入力必須)</th>
+          <td nowrap="">
+            <input type="text" name="remarks" id="remarks" class="text-slate-900 text-xl" value=<%= workflow[0].remarks%> readonly="readonly" />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>進行状況</p>
+    <table id="pathway_table">
+      <thead>
+        <tr>
+          <th nowrap="">経路種別</th>
+          <th nowrap="">役割</th>
+          <th nowrap="">処理者</th>
+          <th nowrap="">結果</th>
+          <th nowrap="">日時</th>
+        </tr>
+      </thead>
+      <tbody id="pathway_tbody" name="pathway">
+      </tbody>
+    </table>
+    <% if (workflow[0].is_complete == 0) { %>
+      <div class="text-center">
+        <button id="confirm_button" class="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">確認する</button>
+      </div>
+    <% } %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const workflow = JSON.parse(document.getElementById('workflow').value);
+        const status = JSON.parse(document.getElementById('status').value);
+        const apply_date = document.getElementById('apply_date');
+        const deployment = document.getElementById('deployment');
+        const st_date = document.getElementById('st_date');
+        const ed_date = document.getElementById('ed_date');
+        const pathway_tbody = document.getElementById('pathway_tbody');
+        const leaf_type = document.getElementById("leaf_type");
+        const confirm_button = document.getElementById("confirm_button");
+        
+        leaf_type.innerHTML = workflow[0].leaf_type;
+
+        apply_date.value = getDateWithString(new Date(workflow[0].apply_date));
+        st_date.value = getDateWithString(new Date(workflow[0].st_date));
+        ed_date.value = getDateWithString(new Date(workflow[0].ed_date));
+
+        function getDateWithString(date) {
+          var dt = new Date(date);
+          var y = dt.getFullYear();
+          var m = ("00" + (dt.getMonth()+1)).slice(-2);
+          var d = ("00" + dt.getDate()).slice(-2);
+          var result = y + "/" + m + "/" + d;
+          return result;
+        }
+
+        for (let i = 0; i < status.length; i++) {
+          let tr = document.createElement('tr');
+          for (let u = 0; u < 5; u++) {
+            let td = document.createElement("td");
+            switch (u) {
+              case 0:
+                td.innerHTML = status[i][u];
+                break;
+              case 1:
+                td.innerHTML = status[i][u];
+                break;
+              case 2:
+                td.innerHTML = status[i][u];
+                break;
+              case 3:
+                status[i][u] == null ? td.innerHTML = "未完" : td.innerHTML = "承認";
+                break;
+              case 4:
+                status[i][3] != null ? td.innerHTML = getDateWithString(status[i][3]) : "";
+                break;
+            }
+            tr.appendChild(td);
+          }
+          pathway_tbody.appendChild(tr);
+        }
+        
+
+        // 承認api
+        const receipt_confirm = () => {
+          fetch(`/api/receipt_confirm/${workflow[0].id}`, {
+            method: 'GET',
+          }).then((data)  => {
+              console.log(data);
+          }).catch((error) => {
+              console.log(error);
+          });
+        };
+
+        confirm_button.addEventListener('click', receipt_confirm, false)
+      })
+    </script>
+  </body>
+</html>

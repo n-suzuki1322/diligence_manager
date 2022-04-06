@@ -1,0 +1,49 @@
+b {
+  font-weight: bold;
+}
+
+hr {
+  display: block;
+  unicode-bidi: isolate;
+  margin-block-start: 0.5em;
+  margin-block-end: 0.5em;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+  overflow: hidden;
+  border-style: inset;
+  border-width: 0;
+  height: 2px;
+  background: url(../images/vr_hr.png) top left repeat-x;
+}
+
+[x-cloak] {
+  display: none;
+}
+
+[aria-hidden="true"] {
+  display: none;	
+}
+
+[aria-hidden="false"] {
+	display: block;
+}
+
+*:not(svg)[aria-hidden="true"]{
+  display: none;
+}
+
+input, select {
+  background-color: #ffffff;
+}
+
+.gradient {
+  background: linear-gradient(90deg, #d53369 0%, #daae51 100%);
+}
+
+.rest {
+  background: #ffc0cb;
+}
+
+.rest input, .rest select, .rest textarea {
+  background-color: #ffc0cb;
+}
