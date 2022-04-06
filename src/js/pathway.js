@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const pathway_table = document.getElementById("pathway_table");
   const tbody = document.getElementById("pathway_tbody");
   const create_pathway_btn = document.getElementById('create_pathway_btn');
-  console.log(create_pathway_btn);
   add_row(pathway_table.rows.length);
 
   deployments.forEach((deployment) => {

@@ -72,18 +72,6 @@ const downloadExcel = () => {
     body: body
   })
   .then( async (res) => {
-    console.log(res);
-    // const url = (window.URL || window.webkitURL).createObjectURL(blob);
-    // const output_file = "daily.xlsx";
-    // const download = document.createElement("a");
-    // download.href = url;
-    // download.download = output_file;
-    // download.click();
-    // (window.URL || window.webkitURL).revokeObjectURL(url);
-    
-
-    // res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    // res.setHeader("Content-Disposition", "attachment; filename=" + output_file);
 
     await workbook.xlsx.write(res);
 

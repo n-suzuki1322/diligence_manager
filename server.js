@@ -43,17 +43,8 @@ const connection = mysql.createConnection({
   multipleStatements: true
 });
 
-// 接続したDB確認
-console.log("host " + process.env.HOST);
-console.log("user " + process.env.DBUSER);
-console.log("password " + process.env.PASSWORD);
-console.log("database " + process.env.DATABASE);
-
 // check the connection
 connection.connect(err => {
-  err
-    ? console.log("error connecting → " + err.stack)
-    : console.log("mysql connecting");
 });
 
 const mysql_query = (connection, sql, values) => {
@@ -86,31 +77,24 @@ app
   const r = req.body;
   const email = r.email;
   const password = r.password;
-  console.log(`signin email = ${email}`);
-  console.log(`signin password = ${password}`);
 
   const query = `select * from users where email = '${email}';`;
   connection.query(
     query,
     (error, result) => {
       if (error) {
-        console.log('problem happened!');
         res.redirect("/signin");
       } else if (result.length == 0 ) {
-        console.log("maybe send wrong password or email");
         res.redirect("/signin");
       } else {
         const hash = result[0].password;
         bcrypt.compare(password, hash, (error, isEqual) => {
           if (!isEqual) {
-            console.log(`error is ${error}`);
             res.redirect("/signin");
           } else {
             req.session.userId = result[0].id;
             req.session.name = result[0].name;
             req.session.email = result[0].email;
-            console.log(`session userId = ${req.session.userId}`);
-            console.log(`session username = ${req.session.name}`);
             res.redirect("/");
           } 
         });
@@ -165,7 +149,6 @@ app
     const read = r.read;
     const email = r.email;
     const password = r.password;
-    console.log(`this is req.body = ${JSON.stringify(r)}`);
     if (name || read || email || password == "") {
       res.render("signup.ejs");
     }
@@ -174,7 +157,6 @@ app
       [email],
       (error, results) => {
         if (results.length > 0) {
-          console.log(`same email is ${JSON.stringify(results)}`);
           res.render("signup.ejs");
         } else {
           next();
@@ -192,16 +174,12 @@ app
       "INSERT INTO users (name, furigana, email, password) VALUES (?, ?, ?, ?);";
     bcrypt.hash(password, SALT, (err, hash) => {
       if (err) {
-        console.log("bcrypt error" + err);
       }
       connection.query(
         INSERT_STATEMENT,
         [name, read, email, hash],
         (err, result) => {
-          console.log("result↓");
-          console.log(result);
           if (err) {
-            console.log(err);
           } else {
             res.redirect("/");
           }
@@ -215,15 +193,12 @@ app
 .get("/api/signout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      console.log(err);
     } else {
-      console.log("session was destroied, sign in again!");
       res.redirect("/");
     }
   });
 })
 
-.listen(port, () => console.log(`listening on port ${port}`));
 
 const daily = require("./routes/daily");
 app.use("/", daily);

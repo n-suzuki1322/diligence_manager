@@ -1,6 +1,5 @@
 'use strict';
 document.addEventListener('DOMContentLoaded', function() {
-  const time_info = document.getElementById('time_info');
   if (time_info.value.length !== 0)  {
     jQuery(function($) {
       const time_info = JSON.parse(document.getElementById("time_info").value);
