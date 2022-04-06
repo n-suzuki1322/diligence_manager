@@ -199,6 +199,8 @@ app
   });
 })
 
+.listen(port, () => console.log(`listening on port ${port}`));
+
 
 const daily = require("./routes/daily");
 app.use("/", daily);
